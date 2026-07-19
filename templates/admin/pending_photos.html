@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Pending Photos Approval - Mountains & Maggi{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2">
+        <h1>📸 Pending Photo Approvals</h1>
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Dashboard</a>
+    </div>
+</div>
+
+{% if photos %}
+    <div class="row">
+        {% for photo in photos %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <img src="{{ url_for('static', filename='uploads/photos/' + photo.filename) }}" class="card-img-top" alt="Pending Photo" style="height: 220px; object-fit: cover;">
+                    <div class="card-body">
+                        <h6 class="card-title">Trek: <strong>{{ photo.trek.name }}</strong></h6>
+                        <p class="card-text text-muted mb-1">Uploaded by: {{ photo.uploader.username }} ({{ photo.uploader.role }})</p>
+                        <p class="card-text text-muted"><small>Uploaded on: {{ photo.created_at.strftime('%d-%m-%Y %H:%M') }}</small></p>
+                        
+                        <div class="d-flex gap-2">
+                            <form action="{{ url_for('admin.approve_photo', photo_id=photo.id) }}" method="POST" class="flex-grow-1">
+                                <button type="submit" class="btn btn-success btn-sm w-100">Approve</button>
+                            </form>
+                            <form action="{{ url_for('admin.reject_photo', photo_id=photo.id) }}" method="POST" class="flex-grow-1" onsubmit="return confirm('Delete this image?');">
+                                <button type="submit" class="btn btn-danger btn-sm w-100">Reject / Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-success">🎉 No pending photo approvals. Excellent job guide-managers!</div>
+{% endif %}
+{% endblock %}

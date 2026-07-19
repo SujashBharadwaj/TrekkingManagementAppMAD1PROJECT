@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Safety Guides - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+    <h1 class="mb-0">Safety Guides & Protocols</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGuideModal">+ New Guide</button>
+</div>
+
+<div class="row">
+    {% for guide in guides %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100 border-danger">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ guide.title }}</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="text-danger">Protocols</h6>
+                <p class="small text-muted" style="white-space: pre-wrap;">{{ guide.content[:150] }}...</p>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span class="badge bg-secondary">{{ guide.treks|length }} Linked Treks</span>
+                    <a href="{{ url_for('admin_ops.edit_safety_guide', id=guide.id) }}" class="btn btn-sm btn-outline-danger">Edit / View Full</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Guide Modal -->
+<div class="modal fade" id="addGuideModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ url_for('admin_ops.add_safety_guide') }}" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Create New Safety Guide</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" required placeholder="E.g., High Altitude Protocol">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Protocols & Instructions</label>
+                        <textarea name="content" class="form-control" rows="5" required placeholder="1. Always carry..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Emergency Contacts (one per line)</label>
+                        <textarea name="emergency_contacts" class="form-control" rows="3" placeholder="Hospital: 9876543210"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Exit Points (one per line)</label>
+                        <textarea name="exit_points" class="form-control" rows="2" placeholder="Base Camp A"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Guide</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

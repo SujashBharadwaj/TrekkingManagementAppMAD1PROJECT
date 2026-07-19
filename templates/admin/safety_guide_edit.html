@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Safety Guide - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin_ops.safety_guides') }}">Safety Guides</a></li>
+                <li class="breadcrumb-item active">Edit Guide #{{ guide.id }}</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow-sm mb-4 border-danger">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Edit Safety Guide</h5>
+                <form action="{{ url_for('admin_ops.delete_safety_guide', id=guide.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this guide? This will unlink it from all treks.');">
+                    <button type="submit" class="btn btn-sm btn-outline-light">Delete Guide</button>
+                </form>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('admin_ops.edit_safety_guide', id=guide.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Title</label>
+                        <input type="text" name="title" class="form-control" value="{{ guide.title }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Protocols & Instructions</label>
+                        <textarea name="content" class="form-control" rows="8" required>{{ guide.content }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Emergency Contacts</label>
+                        <textarea name="emergency_contacts" class="form-control" rows="4">{{ guide.emergency_contacts or '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Exit Points</label>
+                        <textarea name="exit_points" class="form-control" rows="3">{{ guide.exit_points or '' }}</textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ url_for('admin_ops.safety_guides') }}" class="btn btn-secondary me-2">Cancel</a>
+                        <button type="submit" class="btn btn-danger">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-secondary text-white">
+                <h6 class="mb-0">Linked Treks</h6>
+            </div>
+            <div class="card-body">
+                {% if linked_treks %}
+                    <ul class="list-group list-group-flush">
+                        {% for trek in linked_treks %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ trek.name }} <span class="badge bg-light text-dark ms-2">{{ trek.status }}</span></span>
+                                <a href="{{ url_for('admin.edit_trek', id=trek.id) }}" class="btn btn-sm btn-outline-primary">View Trek</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">This guide is not currently assigned to any treks.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

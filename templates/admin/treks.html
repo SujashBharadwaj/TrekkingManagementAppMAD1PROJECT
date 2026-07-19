@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Treks - Admin{% endblock %}
+
+{% block content %}
+<h1 class="border-bottom pb-2 mb-4">Manage Treks</h1>
+
+<!-- Create Trek Form -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Create New Trek Route</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('admin.add_trek') }}" method="POST">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="name" class="form-label">Trek Name <small class="text-muted">(max {{ limits.trek_name_max }})</small></label>
+                    <input type="text" class="form-control" id="name" name="name" required maxlength="{{ limits.trek_name_max }}" placeholder="E.g., Hampta Pass Trek">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="location" class="form-label">Location <small class="text-muted">(max {{ limits.location_max }})</small></label>
+                    <input type="text" class="form-control" id="location" name="location" required maxlength="{{ limits.location_max }}" placeholder="E.g., Manali, Himachal">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="difficulty" class="form-label">Difficulty</label>
+                    <select class="form-select" id="difficulty" name="difficulty">
+                        <option value="Easy">Easy</option>
+                        <option value="Moderate">Moderate</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="duration" class="form-label">Duration (days)</label>
+                    <input type="number" class="form-control" id="duration" name="duration" required min="1" max="{{ limits.duration_max }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="slots" class="form-label">Max Slots</label>
+                    <input type="number" class="form-control" id="slots" name="slots" required min="1" max="{{ limits.slots_max }}">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="price" class="form-label">Price (INR)</label>
+                    <input type="number" step="0.01" class="form-control" id="price" name="price" required min="0" max="{{ limits.price_max }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="staff_id" class="form-label">Assign Staff Guide</label>
+                    <select class="form-select" id="staff_id" name="staff_id">
+                        <option value="0">-- Leave Unassigned --</option>
+                        {% for staff in approved_staff %}
+                            <option value="{{ staff.id }}">{{ staff.staff_profile.name if staff.staff_profile else staff.username }} (ID: {{ staff.id }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Description <small class="text-muted">(max {{ limits.description_max }} chars)</small></label>
+                <textarea class="form-control" id="description" name="description" rows="2" maxlength="{{ limits.description_max }}" placeholder="Brief details about the route..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Create Trek</button>
+        </form>
+    </div>
+</div>
+
+<!-- Treks Inventory Table -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Treks Inventory</h5>
+        <form class="d-flex" method="GET" action="{{ url_for('admin.admin_treks') }}">
+            <input class="form-control form-control-sm me-2" type="search" name="q" placeholder="Search by ID, name or location" value="{{ search }}" style="width: 250px;">
+            <button class="btn btn-outline-light btn-sm" type="submit">Search</button>
+            {% if search %}
+                <a href="{{ url_for('admin.admin_treks') }}" class="btn btn-secondary btn-sm ms-1">Reset</a>
+            {% endif %}
+        </form>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Location</th>
+                        <th>Dates</th>
+                        <th>Slots</th>
+                        <th>Staff</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if treks %}
+                        {% for trek in treks %}
+                            <tr>
+                                <td>{{ trek.id }}</td>
+                                <td>
+                                    <strong>{{ trek.name }}</strong>
+                                    {% if trek.status == 'Emergency' %}
+                                        <span class="badge bg-danger ms-1">SOS</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ trek.location }}</td>
+                                <td style="font-size: 0.85rem;">{{ trek.start_date|ddmmyyyy }}<br>to {{ trek.end_date|ddmmyyyy }}</td>
+                                <td>{{ trek.available_slots }}/{{ trek.total_slots }}</td>
+                                <td>
+                                    {% if trek.assigned_staff and trek.assigned_staff.staff_profile %}
+                                        {{ trek.assigned_staff.staff_profile.name }}
+                                    {% else %}
+                                        <span class="text-muted">None</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-secondary">{{ trek.status }}</span></td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('admin.edit_trek', id=trek.id) }}" class="btn btn-outline-primary" title="Edit Trek">Edit</a>
+                                        <!-- Feature #5: Clone Trek -->
+                                        <form action="{{ url_for('admin_ops.clone_trek', id=trek.id) }}" method="POST" style="display:inline;">
+                                            <button type="submit" class="btn btn-outline-success" title="Clone Trek">+30 Days</button>
+                                        </form>
+                                        <!-- Feature #8: Announce -->
+                                        <a href="{{ url_for('admin_ops.announce', id=trek.id) }}" class="btn btn-outline-info" title="Bulk Announce">📢</a>
+                                        <form action="{{ url_for('admin.delete_trek', id=trek.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this trek?');">
+                                            <button type="submit" class="btn btn-outline-danger" title="Delete Trek">X</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-3 text-muted">No treks found.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

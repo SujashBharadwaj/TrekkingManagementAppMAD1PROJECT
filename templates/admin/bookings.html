@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}All Bookings - Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="border-bottom pb-2">Global Bookings Overview</h1>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Booking Transactions Log</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>User (Trekker)</th>
+                        <th>Trek Name</th>
+                        <th>Location</th>
+                        <th>Booking Date</th>
+                        <th>Slots Booked</th>
+                        <th>Trek Price</th>
+                        <th>Booking Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if bookings %}
+                    {% for booking in bookings %}
+                    <tr>
+                        <td>{{ booking.id }}</td>
+                        <td>
+                            <strong>{{ booking.user.username }}</strong><br>
+                            <small class="text-muted">ID: {{ booking.user_id }} | {{ booking.user.email }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ booking.trek.name }}</strong><br>
+                            <small class="text-muted">Trek ID: {{ booking.trek_id }}</small>
+                        </td>
+                        <td>{{ booking.trek.location }}</td>
+                        <td>{{ booking.booking_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ booking.slots_booked }}</td>
+                        <td>${{ "%.2f"|format(booking.trek.price * booking.slots_booked) }}</td>
+                        <td>
+                            <span
+                                class="badge {% if booking.status == 'Booked' %}bg-success{% elif booking.status == 'Cancelled' %}bg-secondary{% else %}bg-info{% endif %}">
+                                {{ booking.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">No booking transactions found in database.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Regions - Admin{% endblock %}
+
+{% block content %}
+<h1 class="border-bottom pb-2 mb-4">Staff Region Tracking & Availability</h1>
+
+<div class="row">
+    {% for item in staff_data %}
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-dark text-white d-flex justify-content-between">
+                <h5 class="mb-0">{{ item.profile.name if item.profile else item.staff.username }}</h5>
+                <span class="badge bg-secondary">{{ item.profile.home_region or 'No Region' }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-3">
+                    <div class="col-4 border-end">
+                        <h4 class="text-success mb-0">{{ item.status_counts['Completed'] }}</h4>
+                        <small class="text-muted">Done</small>
+                    </div>
+                    <div class="col-4 border-end">
+                        <h4 class="text-primary mb-0">{{ item.status_counts['Open'] }}</h4>
+                        <small class="text-muted">Active</small>
+                    </div>
+                    <div class="col-4">
+                        <h4 class="text-secondary mb-0">{{ item.total_treks }}</h4>
+                        <small class="text-muted">Total</small>
+                    </div>
+                </div>
+
+                <h6>Regions Worked In:</h6>
+                <p>
+                    {% for r in item.regions %}
+                        <span class="badge bg-info text-dark me-1">{{ r }}</span>
+                    {% else %}
+                        <span class="text-muted">No treks assigned yet.</span>
+                    {% endfor %}
+                </p>
+
+                <hr>
+                <h6 class="text-danger">Upcoming Unavailability</h6>
+                {% if item.availability_blocks %}
+                    <ul class="list-group list-group-flush small">
+                        {% for block in item.availability_blocks %}
+                        <li class="list-group-item px-0 py-1">
+                            <strong>{{ block.unavailable_from.strftime('%d %b') }} - {{ block.unavailable_to.strftime('%d %b') }}</strong><br>
+                            <span class="text-muted">{{ block.reason or 'No reason provided' }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted small mb-0">Fully available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

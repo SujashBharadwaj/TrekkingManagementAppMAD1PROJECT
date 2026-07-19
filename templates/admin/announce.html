@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Bulk Announce - Admin{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_treks') }}">Treks</a></li>
+                <li class="breadcrumb-item active">Announce (Trek #{{ trek.id }})</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow-sm mb-4 border-info">
+            <div class="card-header bg-info text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Broadcast Announcement</h5>
+                <span class="badge bg-dark">{{ booked_count }} Booked Trekkers</span>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-4">Send a push message to all trekkers currently booked for <strong>{{ trek.name }}</strong> ({{ trek.start_date.strftime('%d %b %Y') }}). They will see this on their dashboard.</p>
+                
+                <form action="{{ url_for('admin_ops.announce', id=trek.id) }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Announcement Title</label>
+                        <input type="text" name="title" class="form-control" required placeholder="E.g., Weather Update, Gear Change">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Message</label>
+                        <textarea name="message" class="form-control" rows="4" required placeholder="Enter the detailed message here..."></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-info px-4">Broadcast Message</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <h5 class="border-bottom pb-2 mb-3">Past Announcements</h5>
+        {% if announcements %}
+            <div class="list-group">
+                {% for ann in announcements %}
+                <div class="list-group-item list-group-item-action flex-column align-items-start">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1 text-primary">{{ ann.title }}</h6>
+                        <small class="text-muted">{{ ann.created_at.strftime('%d %b, %H:%M') }}</small>
+                    </div>
+                    <p class="mb-1 small">{{ ann.message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">No announcements have been sent for this trek.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

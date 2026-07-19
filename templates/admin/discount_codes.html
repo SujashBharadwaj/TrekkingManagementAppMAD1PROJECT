@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block title %}Discount Codes - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+    <h1 class="mb-0">Promo / Discount Codes</h1>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCodeModal">+ New Code</button>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th>Usage</th>
+                        <th>Expiry</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for code in codes %}
+                    <tr>
+                        <td class="fw-bold">{{ code.code }}</td>
+                        <td>{{ code.discount_type|capitalize }}</td>
+                        <td>
+                            {% if code.discount_type == 'percent' %}
+                                {{ code.value }}%
+                            {% else %}
+                                ₹{{ "%.0f"|format(code.value) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ code.times_used }} / {% if code.max_uses %}{{ code.max_uses }}{% else %}&infin;{% endif %}
+                        </td>
+                        <td>
+                            {% if code.expiry_date %}
+                                {{ code.expiry_date.strftime('%d %b %Y') }}
+                                {% if code.expiry_date < current_date %}
+                                    <span class="badge bg-danger ms-1">Expired</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">Never</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if code.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('admin_ops.toggle_discount_code', id=code.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm {% if code.is_active %}btn-outline-secondary{% else %}btn-outline-success{% endif %}">
+                                    {% if code.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if not codes %}
+                        <tr>
+                            <td colspan="7" class="text-center py-3 text-muted">No discount codes created yet.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Code Modal -->
+<div class="modal fade" id="addCodeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('admin_ops.add_discount_code') }}" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Create Discount Code</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Code (Uppercase)</label>
+                        <input type="text" name="code" class="form-control text-uppercase" required placeholder="E.g., SUMMER20">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Type</label>
+                            <select name="discount_type" class="form-select">
+                                <option value="percent">Percentage (%)</option>
+                                <option value="flat">Flat Amount (₹)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Value</label>
+                            <input type="number" step="0.01" name="value" class="form-control" required min="1">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Max Uses (optional)</label>
+                            <input type="number" name="max_uses" class="form-control" min="1" placeholder="Leave empty for unlimited">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Expiry Date (optional)</label>
+                            <input type="date" name="expiry_date" class="form-control">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Create Code</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

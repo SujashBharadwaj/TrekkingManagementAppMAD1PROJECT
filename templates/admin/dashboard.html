@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - M&M{% endblock %}
+
+{% block content %}
+<h1 class="border-bottom pb-2 mb-4">Admin Dashboard</h1>
+
+<!-- Emergency Alert Banner (Feature #14) -->
+{% if emergency_treks %}
+<div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+    <strong class="me-2">🚨 ACTIVE EMERGENCY:</strong>
+    {% for t in emergency_treks %}
+        <span class="badge bg-danger me-2">{{ t.name }} (ID: {{ t.id }})</span>
+    {% endfor %}
+    <span class="ms-2">— Contact assigned staff immediately.</span>
+</div>
+{% endif %}
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center bg-light border">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Treks</h6>
+                <p class="display-6 fw-bold mb-0 text-primary">{{ total_treks }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center bg-light border">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Staff Guides</h6>
+                <p class="display-6 fw-bold mb-0 text-primary">{{ total_staff }}</p>
+                {% if pending_staff > 0 %}
+                    <small class="text-warning fw-bold">{{ pending_staff }} pending approval</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center bg-light border">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Trekkers</h6>
+                <p class="display-6 fw-bold mb-0 text-primary">{{ total_users }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center bg-light border">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Bookings</h6>
+                <p class="display-6 fw-bold mb-0 text-primary">{{ total_bookings }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Revenue & Expenses Quick Stat -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card text-center border-success">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Revenue</h6>
+                <p class="display-6 fw-bold mb-0 text-success">₹{{ "%.2f"|format(total_revenue) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-center border-warning">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Pending Expenses</h6>
+                <p class="display-6 fw-bold mb-0 text-warning">{{ pending_expenses }}</p>
+                <small class="text-muted">claims awaiting review</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-center border-info">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Pending Staff</h6>
+                <p class="display-6 fw-bold mb-0 text-info">{{ pending_staff }}</p>
+                <small class="text-muted">awaiting approval</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Navigation -->
+<h4 class="mb-3">Quick Actions</h4>
+<div class="row">
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border">
+            <div class="card-body text-center">
+                <h5 class="card-title">Manage Treks</h5>
+                <p class="card-text text-muted">Create, edit, delete trek routes and assign staff.</p>
+                <a href="{{ url_for('admin.admin_treks') }}" class="btn btn-primary">Go to Treks</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border">
+            <div class="card-body text-center">
+                <h5 class="card-title">Manage Staff</h5>
+                <p class="card-text text-muted">Approve registrations, block or unblock guides.</p>
+                <a href="{{ url_for('admin.admin_staff') }}" class="btn btn-primary">Go to Staff</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border">
+            <div class="card-body text-center">
+                <h5 class="card-title">Manage Users</h5>
+                <p class="card-text text-muted">View trekker accounts, block or unblock users.</p>
+                <a href="{{ url_for('admin.admin_users') }}" class="btn btn-primary">Go to Users</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border">
+            <div class="card-body text-center">
+                <h5 class="card-title">All Bookings</h5>
+                <p class="card-text text-muted">View the complete booking transactions history.</p>
+                <a href="{{ url_for('admin.view_all_bookings') }}" class="btn btn-primary">Go to Bookings</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border border-warning">
+            <div class="card-body text-center">
+                <h5 class="card-title">Photo Approvals</h5>
+                <p class="card-text text-muted">Review and approve trek photos uploaded by staff/trekkers.</p>
+                <a href="{{ url_for('admin.pending_photos') }}" class="btn btn-warning">Review Photos</a>
+            </div>
+        </div>
+    </div>
+    <!-- New Feature Cards -->
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border border-success">
+            <div class="card-body text-center">
+                <h5 class="card-title">💰 Financials</h5>
+                <p class="card-text text-muted">Revenue, expenses, and P&L dashboard per trek.</p>
+                <a href="{{ url_for('admin_finance.financials') }}" class="btn btn-success">View Financials</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border border-info">
+            <div class="card-body text-center">
+                <h5 class="card-title">📊 Occupancy</h5>
+                <p class="card-text text-muted">Trek slot occupancy metrics and fill rates.</p>
+                <a href="{{ url_for('admin_ops.occupancy') }}" class="btn btn-info">View Occupancy</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border">
+            <div class="card-body text-center">
+                <h5 class="card-title">🗺️ Staff Regions</h5>
+                <p class="card-text text-muted">Track staff trek history and active regions.</p>
+                <a href="{{ url_for('admin_ops.staff_regions') }}" class="btn btn-primary">View Regions</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border">
+            <div class="card-body text-center">
+                <h5 class="card-title">🛡️ Safety Guides</h5>
+                <p class="card-text text-muted">Create and manage safety protocols for treks.</p>
+                <a href="{{ url_for('admin_ops.safety_guides') }}" class="btn btn-primary">Manage Guides</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border">
+            <div class="card-body text-center">
+                <h5 class="card-title">🏷️ Discount Codes</h5>
+                <p class="card-text text-muted">Create promo codes for trekker checkout.</p>
+                <a href="{{ url_for('admin_ops.discount_codes') }}" class="btn btn-primary">Manage Codes</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card h-100 border">
+            <div class="card-body text-center">
+                <h5 class="card-title">💵 Staff Payouts</h5>
+                <p class="card-text text-muted">Monthly payout reports for all staff.</p>
+                <a href="{{ url_for('admin_finance.payouts') }}" class="btn btn-primary">View Payouts</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

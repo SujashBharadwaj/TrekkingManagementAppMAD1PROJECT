@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Occupancy Metrics - Admin{% endblock %}
+
+{% block content %}
+<h1 class="border-bottom pb-2 mb-4">Trek Occupancy Metrics</h1>
+
+<div class="row">
+    {% for item in occupancy_data %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">{{ item.trek.name }}</h5>
+                    <span class="badge {% if item.pct >= 90 %}bg-success{% elif item.pct >= 50 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                        {{ item.pct }}% Full
+                    </span>
+                </div>
+                <p class="text-muted small mb-3">{{ item.trek.start_date.strftime('%d %b %Y') }} - {{ item.trek.end_date.strftime('%d %b %Y') }}</p>
+                
+                <div class="d-flex justify-content-between mb-1 small">
+                    <span>{{ item.booked }} Booked</span>
+                    <span>{{ item.available }} Available</span>
+                </div>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar {% if item.pct >= 90 %}bg-success{% elif item.pct >= 50 %}bg-warning text-dark{% else %}bg-secondary{% endif %}" 
+                         role="progressbar" style="width: {{ item.pct }}%;" 
+                         aria-valuenow="{{ item.pct }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ item.booked }} / {{ item.total }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% if not occupancy_data %}
+    <div class="col-12 text-center py-5">
+        <h5 class="text-muted">No open or completed treks to show.</h5>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

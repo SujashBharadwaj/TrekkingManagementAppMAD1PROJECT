@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block title %}Financials - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+    <h1 class="mb-0">Financial Profit/Loss Dashboard</h1>
+    <a href="{{ url_for('admin_finance.export_financials') }}" class="btn btn-primary">Export CSV</a>
+</div>
+
+<!-- Grand Totals -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center bg-light border-success">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Revenue</h6>
+                <p class="display-6 fw-bold mb-0 text-success">₹{{ "%.0f"|format(grand_revenue) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-light border-danger">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Total Expenses</h6>
+                <p class="display-6 fw-bold mb-0 text-danger">₹{{ "%.0f"|format(grand_expenses) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center bg-light border-warning">
+            <div class="card-body">
+                <h6 class="card-title text-muted">Staff Payouts</h6>
+                <p class="display-6 fw-bold mb-0 text-warning">₹{{ "%.0f"|format(grand_payouts) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center text-white {% if grand_net >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+            <div class="card-body">
+                <h6 class="card-title">Net Profit/Loss</h6>
+                <p class="display-6 fw-bold mb-0">₹{{ "%.0f"|format(grand_net) }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Per-Trek Table -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Per-Trek Breakdown</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Trek Name</th>
+                        <th>Dates</th>
+                        <th>Bookings</th>
+                        <th class="text-success">Revenue (₹)</th>
+                        <th class="text-danger">Expenses (₹)</th>
+                        <th class="text-warning">Payouts (₹)</th>
+                        <th>Net P&L (₹)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in financials_data %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.trek.name }}</strong>
+                            <br><small class="text-muted">{{ item.trek.status }}</small>
+                        </td>
+                        <td style="font-size: 0.85rem;">{{ item.trek.start_date|ddmmyyyy }}<br>to {{ item.trek.end_date|ddmmyyyy }}</td>
+                        <td>{{ item.booking_count }} slots</td>
+                        <td class="text-success fw-bold">{{ "%.2f"|format(item.revenue) }}</td>
+                        <td class="text-danger">{{ "%.2f"|format(item.expenses) }}</td>
+                        <td class="text-warning text-dark">{{ "%.2f"|format(item.payouts) }}</td>
+                        <td class="fw-bold {% if item.net >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ "%.2f"|format(item.net) }}
+                        </td>
+                        <td>
+                            <!-- Modal trigger for pending expenses -->
+                            {% set pending_count = item.trek.expenses|selectattr("status", "equalto", "Pending")|list|length %}
+                            {% if pending_count > 0 %}
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#expenseModal{{ item.trek.id }}">
+                                    Review Expenses ({{ pending_count }})
+                                </button>
+                            {% else %}
+                                <span class="text-muted small">All settled</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Expense Review Modal -->
+                    <div class="modal fade" id="expenseModal{{ item.trek.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-warning">
+                                    <h5 class="modal-title">Review Expenses - {{ item.trek.name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Staff</th>
+                                                <th>Date</th>
+                                                <th>Description</th>
+                                                <th>Amount (₹)</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for exp in item.trek.expenses if exp.status == 'Pending' %}
+                                            <tr>
+                                                <td>{{ exp.staff.staff_profile.name if exp.staff.staff_profile else exp.staff.username }}</td>
+                                                <td>{{ exp.created_at.strftime('%Y-%m-%d') }}</td>
+                                                <td>{{ exp.description }}</td>
+                                                <td class="fw-bold">{{ "%.2f"|format(exp.amount) }}</td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <form action="{{ url_for('admin_finance.approve_expense', id=exp.id) }}" method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-success">Approve</button>
+                                                        </form>
+                                                        <form action="{{ url_for('admin_finance.reject_expense', id=exp.id) }}" method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-danger">Reject</button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not financials_data %}
+                        <tr>
+                            <td colspan="8" class="text-center py-3 text-muted">No financial data available yet.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

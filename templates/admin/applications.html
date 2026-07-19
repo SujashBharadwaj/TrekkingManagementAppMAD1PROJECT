@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Applications - Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+    <h1 class="mb-0">Staff Applications</h1>
+    <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+</div>
+
+{% if applications %}
+<div class="table-responsive">
+    <table class="table table-hover align-middle shadow-sm">
+        <thead class="table-light">
+            <tr>
+                <th>Applicant User</th>
+                <th>Aadhar/Passport</th>
+                <th>Region</th>
+                <th>Experience</th>
+                <th>Certifications</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td><strong>{{ app.user.username }}</strong><br><small class="text-muted">{{ app.user.email }}</small></td>
+                <td>{{ app.aadhar_or_passport }}</td>
+                <td>{{ app.region }}</td>
+                <td>
+                    <span class="badge {% if app.experience_level == 'Advanced' %}bg-success{% elif app.experience_level == 'Intermediate' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                        {{ app.experience_level }}
+                    </span>
+                </td>
+                <td><small>{{ app.certification or 'None' }}</small></td>
+                <td>{{ app.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <form action="{{ url_for('admin.handle_application', id=app.id) }}" method="POST" class="d-inline-flex gap-1">
+                        <button type="submit" name="action" value="approve" class="btn btn-sm btn-success">Approve</button>
+                        <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">No pending staff applications at this time.</div>
+{% endif %}
+{% endblock %}

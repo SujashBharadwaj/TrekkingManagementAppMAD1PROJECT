@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Registered Trekkers - Staff{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('staff.staff_dashboard') }}">Workspace</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Registered Trekkers</li>
+            </ol>
+        </nav>
+        <h1 class="border-bottom pb-2">Participants for: {{ trek.name }}</h1>
+        <p class="text-muted">📍 Location: {{ trek.location }} | Dates: {{ trek.start_date|ddmmyyyy }} to {{ trek.end_date|ddmmyyyy }}</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Trekker Roster</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Trekker ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Slots Booked</th>
+                        <th>Booking Status</th>
+                        <th>Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if bookings %}
+                        {% for booking in bookings %}
+                            <tr>
+                                <td>{{ booking.user.id }}</td>
+                                <td><strong>{{ booking.user.username }}</strong></td>
+                                <td>{{ booking.user.email }}</td>
+                                <td>{{ booking.slots_booked }}</td>
+                                <td>
+                                    <span class="badge bg-success">
+                                        {{ booking.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <form action="{{ url_for('staff.mark_attendance', trek_id=trek.id, booking_id=booking.id) }}" method="POST" class="d-flex align-items-center gap-2">
+                                        <select name="attendance_status" class="form-select form-select-sm" style="width: auto;">
+                                            <option value="" {% if not booking.attendance_status %}selected{% endif %}>Pending</option>
+                                            <option value="Present" {% if booking.attendance_status == 'Present' %}selected{% endif %}>Present</option>
+                                            <option value="No-Show" {% if booking.attendance_status == 'No-Show' %}selected{% endif %}>No-Show</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">Save</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No trekkers have registered for this trek yet.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

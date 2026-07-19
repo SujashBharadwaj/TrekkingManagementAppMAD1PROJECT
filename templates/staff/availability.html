@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Availability - Staff{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('staff.staff_dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Availability Calendar</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow-sm mb-4 border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Block Out Time-Off</h5>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-4">Select the dates you will be unavailable. Admins will see this when assigning treks.</p>
+                
+                <form action="{{ url_for('staff_ops.availability') }}" method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">From Date</label>
+                            <input type="date" name="from_date" class="form-control" required min="{{ current_date.strftime('%Y-%m-%d') }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">To Date</label>
+                            <input type="date" name="to_date" class="form-control" required min="{{ current_date.strftime('%Y-%m-%d') }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Reason (Optional)</label>
+                        <input type="text" name="reason" class="form-control" placeholder="E.g., Personal holiday, medical...">
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary px-4">Add Unavailable Block</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <h5 class="border-bottom pb-2 mb-3">Your Availability Blocks</h5>
+        {% if blocks %}
+            <div class="list-group">
+                {% for block in blocks %}
+                <div class="list-group-item d-flex justify-content-between align-items-center {% if block.unavailable_to < current_date %}bg-light text-muted{% endif %}">
+                    <div>
+                        <h6 class="mb-1">{{ block.unavailable_from.strftime('%d %b %Y') }} to {{ block.unavailable_to.strftime('%d %b %Y') }}</h6>
+                        {% if block.reason %}
+                            <small class="mb-0">{{ block.reason }}</small>
+                        {% endif %}
+                        
+                        {% if block.unavailable_to < current_date %}
+                            <span class="badge bg-secondary ms-2">Past</span>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <form action="{{ url_for('staff_ops.delete_availability', id=block.id) }}" method="POST" onsubmit="return confirm('Remove this availability block?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted">You are fully available.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

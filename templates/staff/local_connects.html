@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Local Connects - Staff{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('staff.staff_dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Local Connects (Trek #{{ trek.id }})</li>
+            </ol>
+        </nav>
+
+        <h3 class="mb-4">📞 Local Connects & Transport</h3>
+        <p class="text-muted mb-4">Contact information for local drivers, hospitals, homestays, and emergency services for <strong>{{ trek.name }}</strong>.</p>
+
+        <!-- Trek Specific Local Connects -->
+        <div class="card shadow-sm border-success mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Trek Support Network</h5>
+            </div>
+            <div class="card-body">
+                {% if connects %}
+                    <ul class="list-group list-group-flush">
+                        {% for line in connects %}
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-phone-alt text-success me-3"></i>
+                                {{ line }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0 p-2">No local connects have been added to this trek.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Emergency Contacts from Safety Guide -->
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Official Emergency Contacts (Safety Guide)</h5>
+            </div>
+            <div class="card-body">
+                {% if guide_contacts %}
+                    <ul class="list-group list-group-flush">
+                        {% for line in guide_contacts %}
+                            <li class="list-group-item d-flex align-items-center text-danger">
+                                <strong>🚨 {{ line }}</strong>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0 p-2">No safety guide with emergency contacts is linked to this trek.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

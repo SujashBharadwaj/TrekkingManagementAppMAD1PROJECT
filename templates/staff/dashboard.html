@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Dashboard - M&M{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+    <h1 class="mb-0">Staff Dashboard</h1>
+    <a href="{{ url_for('staff_ops.availability') }}" class="btn btn-outline-primary">Manage Availability</a>
+</div>
+
+<!-- Availability Alert -->
+{% if availability_blocks %}
+<div class="alert alert-info py-2 mb-4" role="alert">
+    <strong>Upcoming Time-Off:</strong> You have marked yourself unavailable for {{ availability_blocks|length }} upcoming period(s). 
+    <a href="{{ url_for('staff_ops.availability') }}" class="alert-link">View details</a>.
+</div>
+{% endif %}
+
+<h4 class="mb-3">My Assigned Treks</h4>
+<div class="row">
+    {% if treks %}
+        {% for trek in treks %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm {% if trek.status == 'Emergency' %}border-danger{% endif %}">
+                    <div class="card-header d-flex justify-content-between align-items-center {% if trek.status == 'Emergency' %}bg-danger text-white{% else %}bg-primary text-white{% endif %}">
+                        <h5 class="mb-0">{{ trek.name }}</h5>
+                        {% if trek.status == 'Emergency' %}
+                            <span class="badge bg-light text-danger fs-6 blink">SOS ACTIVE</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">{{ trek.status }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Dates:</strong> {{ trek.start_date|ddmmyyyy }} to {{ trek.end_date|ddmmyyyy }}</p>
+                        <p class="mb-3"><strong>Location:</strong> {{ trek.location }} ({{ trek.region }})</p>
+                        
+                        <h6 class="border-bottom pb-1">Trek Management Hub</h6>
+                        <div class="d-grid gap-2">
+                            <!-- Core Ops -->
+                            <a href="{{ url_for('staff.staff_edit_trek', id=trek.id) }}" class="btn btn-sm btn-outline-primary text-start">
+                                📝 Update Status & Add Photos
+                            </a>
+                            <a href="{{ url_for('staff.view_participants', id=trek.id) }}" class="btn btn-sm btn-outline-primary text-start">
+                                👥 View Trekkers & Attendance
+                            </a>
+                            <a href="{{ url_for('staff.staff_expenses', id=trek.id) }}" class="btn btn-sm btn-outline-warning text-dark text-start">
+                                💵 Log Cash Expenses
+                            </a>
+                            
+                            <!-- New Feature Ops -->
+                            <a href="{{ url_for('staff_ops.checklist', id=trek.id) }}" class="btn btn-sm btn-outline-info text-start">
+                                ✅ Daily Itinerary Checklist
+                            </a>
+                            <a href="{{ url_for('staff_ops.gear_check', id=trek.id) }}" class="btn btn-sm btn-outline-info text-start">
+                                🎒 Pre-Trek Gear Check
+                            </a>
+                            <a href="{{ url_for('staff_ops.local_connects', id=trek.id) }}" class="btn btn-sm btn-outline-success text-start">
+                                📞 Local Connects & Transport
+                            </a>
+                            <a href="{{ url_for('staff_ops.view_safety_guide', trek_id=trek.id) }}" class="btn btn-sm btn-outline-success text-start">
+                                🛡️ Safety Protocols
+                            </a>
+                            <a href="{{ url_for('staff_ops.debrief', id=trek.id) }}" class="btn btn-sm btn-outline-secondary text-start">
+                                📋 Post-Trek Debrief Report
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0 pt-0">
+                        <form action="{{ url_for('staff_ops.sos_alert', id=trek.id) }}" method="POST" class="d-grid">
+                            {% if trek.status == 'Emergency' %}
+                                <button type="submit" class="btn btn-success" onsubmit="return confirm('Cancel the emergency SOS?');">Cancel SOS Alert</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-danger" onsubmit="return confirm('TRIGGER EMERGENCY SOS? This alerts all admins.');">🚨 TRIGGER SOS</button>
+                            {% endif %}
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                You currently have no assigned treks. When admins assign you to lead a trek, it will appear here.
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

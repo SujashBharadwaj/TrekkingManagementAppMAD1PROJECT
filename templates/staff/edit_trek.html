@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Trek - Staff{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('staff.staff_dashboard') }}">Workspace</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Update Trek</li>
+            </ol>
+        </nav>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Update Trek details (ID: {{ trek.id }})</h4>
+            </div>
+            <div class="card-body p-4">
+                <p><strong>Trek Name:</strong> {{ trek.name }} | <strong>Location:</strong> {{ trek.location }}</p>
+                <hr>
+                
+                <form action="{{ url_for('staff.staff_edit_trek', id=trek.id) }}" method="POST">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="slots" class="form-label">Total Slot Capacity</label>
+                            <input type="number" class="form-control" id="slots" name="slots" value="{{ trek.total_slots }}" required min="1">
+                            <small class="text-muted">Currently Booked: {{ trek.total_slots - trek.available_slots }}</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="price" class="form-label">Price (₹)</label>
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ trek.price }}" required min="0">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Trek Status</label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="Pending" {% if trek.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="Approved" {% if trek.status == 'Approved' %}selected{% endif %}>Approved</option>
+                            <option value="Open" {% if trek.status == 'Open' %}selected{% endif %}>Open</option>
+                            <option value="In Progress" {% if trek.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                            <option value="Closed" {% if trek.status == 'Closed' %}selected{% endif %}>Closed</option>
+                            <option value="Completed" {% if trek.status == 'Completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                        <small class="text-muted">Trekkers can only book treks when the status is strictly set to <strong>Open</strong>.</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label">Description / Notice</label>
+                        <textarea class="form-control" id="description" name="description" rows="5">{{ trek.description }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('staff.staff_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Update Trek</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Photo Upload Section -->
+        <div class="card mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Trek Photos</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('staff.staff_upload_photo', id=trek.id) }}" method="POST" enctype="multipart/form-data" class="mb-3">
+                    <div class="input-group">
+                        <input type="file" class="form-control" name="photo" accept=".png,.jpg,.jpeg" required>
+                        <button type="submit" class="btn btn-primary">Upload Photo</button>
+                    </div>
+                    <small class="text-muted">Allowed: .png, .jpg, .jpeg (max 2MB)</small>
+                </form>
+                {% if trek.photos %}
+                    <div class="row">
+                        {% for photo in trek.photos %}
+                            <div class="col-md-4 mb-3">
+                                <img src="{{ url_for('static', filename='uploads/photos/' + photo.filename) }}" class="img-fluid rounded" alt="Trek photo">
+                                <small class="text-muted d-block">Uploaded by: {{ photo.uploader.username }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No photos uploaded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

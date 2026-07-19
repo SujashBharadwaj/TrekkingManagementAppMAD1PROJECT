@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Safety Guide - Staff{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('staff.staff_dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Safety Protocol</li>
+            </ol>
+        </nav>
+
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">🛡️ Safety Guide: {{ guide.title }}</h4>
+                <small>Assigned to: {{ trek.name }}</small>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="text-danger border-bottom pb-2 mb-3">Protocols & Instructions</h5>
+                <p style="white-space: pre-wrap;" class="mb-4">{{ guide.content }}</p>
+
+                {% if guide.emergency_contacts %}
+                <h5 class="text-danger border-bottom pb-2 mb-3 mt-4">Emergency Contacts</h5>
+                <p style="white-space: pre-wrap;" class="mb-4">{{ guide.emergency_contacts }}</p>
+                {% endif %}
+
+                {% if guide.exit_points %}
+                <h5 class="text-danger border-bottom pb-2 mb-3 mt-4">Evacuation / Exit Points</h5>
+                <p style="white-space: pre-wrap;" class="mb-0">{{ guide.exit_points }}</p>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">Adhere to these protocols strictly. In case of emergency, trigger the SOS alert from your dashboard.</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

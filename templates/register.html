@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - M&M{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0">Create Account</h4>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('auth.register') }}" method="POST">
+                    
+                    <h5 class="border-bottom pb-2 mb-3">Login Details</h5>
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="username" name="username" required placeholder="Choose a username">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" name="email" required placeholder="Enter email">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="password" name="password" required placeholder="Choose a password">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <!-- Defaulting account type to Trekker. Users can apply as Staff from their dashboard. -->
+                    </div>
+
+                    <h5 class="border-bottom pb-2 mb-3">Profile Details</h5>
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" required placeholder="Enter your full name">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contact" class="form-label">Contact Details</label>
+                        <input type="text" class="form-control" id="contact" name="contact" placeholder="Phone number or address">
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-success">Register</button>
+                    </div>
+                </form>
+                <div class="text-center">
+                    <p class="mb-0 text-muted">Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

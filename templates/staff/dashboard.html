@@ -104,7 +104,7 @@
             labels: [{% for t in treks %}"{{ t.name }} ({{ t.start_date.strftime('%b %d') }})",{% endfor %}],
             datasets: [{
                 label: 'Registered Participants',
-                data: [{% for t in treks %}{{ t.capacity - t.available_slots if t.capacity else 10 - t.available_slots }},{% endfor %}],
+                data: [{% for t in treks %}{{ t.total_slots - t.available_slots }},{% endfor %}],
                 backgroundColor: 'rgba(75, 192, 192, 0.5)',
                 borderColor: 'rgba(75, 192, 192, 1)',
                 borderWidth: 1

@@ -25,6 +25,11 @@ h1, h2, h3, h4, h5, h6, .navbar-brand, .card-title {
     padding: 2rem;
 }
 
+/* ===== Custom Navbar ===== */
+.navbar-custom {
+    background: linear-gradient(135deg, #1a5276 0%, #2e86c1 100%) !important;
+}
+
 .hero-section h1 {
     color: #fff;
 }

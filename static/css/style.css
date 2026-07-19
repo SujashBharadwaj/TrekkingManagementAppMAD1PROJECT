@@ -1,0 +1,71 @@
+/* ===== Mountains & Maggi - Global Styles ===== */
+
+body {
+    background-color: #ffffff;
+    color: #333333;
+    font-family: Arial, Helvetica, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand, .card-title {
+    font-family: "Copperplate Gothic Light", "Copperplate Gothic Bold", "Copperplate Gothic", serif;
+}
+
+/* ===== Hero Section (homepage) ===== */
+.hero-section {
+    background: linear-gradient(135deg, #1a5276 0%, #2e86c1 100%);
+    color: #fff;
+    border-radius: 8px;
+    padding: 2rem;
+}
+
+.hero-section h1 {
+    color: #fff;
+}
+
+.hero-section p {
+    color: #d6eaf8;
+}
+
+/* ===== Trek Cards ===== */
+.trek-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 8px;
+}
+
+.trek-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== Dashboard cards ===== */
+.dashboard-card {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+}
+
+/* ===== Footer (green) ===== */
+footer {
+    background-color: #2d6a4f;
+    color: #d8f3dc;
+    padding: 20px 0;
+}
+
+/* ===== Filter card ===== */
+.card.shadow-sm {
+    border-radius: 8px;
+}
+
+/* ===== Difficulty badges ===== */
+.badge.bg-success { background-color: #27ae60 !important; }
+.badge.bg-warning { background-color: #f39c12 !important; }
+.badge.bg-danger  { background-color: #e74c3c !important; }
+.badge.bg-info    { background-color: #3498db !important; }

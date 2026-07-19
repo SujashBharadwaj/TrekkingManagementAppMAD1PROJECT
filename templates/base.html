@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Trekking Management Application - Efficient trek tracking and organizers coordination.">
+    <title>{% block title %}Mountains & Maggi{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏔️</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('main.index') }}">🏔️ Mountains & Maggi</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{{ url_for('main.index') }}">Home</a>
+                    </li>
+
+                    {% if session.get('role') == 'admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.path == '/admin/dashboard' %}active{% endif %}" href="{{ url_for('admin.admin_dashboard') }}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/admin/trek' in request.path %}active{% endif %}" href="{{ url_for('admin.admin_treks') }}">Treks</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/admin/staff' in request.path %}active{% endif %}" href="{{ url_for('admin.admin_staff') }}">Staff</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/admin/users' in request.path %}active{% endif %}" href="{{ url_for('admin.admin_users') }}">Users</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/admin/bookings' in request.path %}active{% endif %}" href="{{ url_for('admin.view_all_bookings') }}">Bookings</a>
+                        </li>
+                    {% elif session.get('role') == 'staff' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/staff/' in request.path %}active{% endif %}" href="{{ url_for('staff.staff_dashboard') }}">Staff Workspace</a>
+                        </li>
+                    {% elif session.get('role') == 'trekker' %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if '/user/dashboard' in request.path %}active{% endif %}" href="{{ url_for('trekker.user_dashboard') }}">Dashboard</a>
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <div class="d-flex align-items-center">
+                    {% if session.get('user_id') %}
+                        <span class="text-light me-3 d-none d-sm-inline">Hello, <strong>{{ session.get('username') }}</strong> <span class="badge bg-light text-primary text-capitalize">{{ session.get('role') }}</span></span>
+                        {% if session.get('role') == 'trekker' %}
+                            <a href="{{ url_for('trekker.profile') }}" class="btn btn-outline-light btn-sm me-2">Profile</a>
+                            <a href="{{ url_for('trekker.apply_staff') }}" class="btn btn-outline-warning btn-sm me-2">Apply as Staff</a>
+                        {% endif %}
+                        <a href="{{ url_for('auth.logout') }}" class="btn btn-danger btn-sm">Logout</a>
+                    {% else %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">Account</button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ url_for('auth.login') }}">Login</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.register') }}">Register</a></li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <main class="container py-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="mt-auto" style="background-color: #2d6a4f; color: #d8f3dc; padding: 20px 0;">
+        <div class="container text-center">
+            <p class="mb-1">&copy; 2026 Mountains & Maggi - Trekking Management</p>
+            <p class="mb-0 small">📞 +91 98765 XXXXX &nbsp;|&nbsp; 📧 <a href="mailto:hello@mountainsandmaggi.in" style="color: #d8f3dc; text-decoration: underline;">hello@mountainsandmaggi.in</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const startDateInput = document.getElementById('start_date');
+            const endDateInput = document.getElementById('end_date');
+            const durationInput = document.getElementById('duration');
+
+            if (startDateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                startDateInput.setAttribute('min', today);
+
+                function calculateDates() {
+                    if (startDateInput.value && durationInput && durationInput.value) {
+                        const start = new Date(startDateInput.value);
+                        const duration = parseInt(durationInput.value);
+                        if (duration > 0) {
+                            start.setDate(start.getDate() + duration - 1);
+                            const endDateStr = start.toISOString().split('T')[0];
+                            if (endDateInput) {
+                                endDateInput.value = endDateStr;
+                                endDateInput.setAttribute('min', startDateInput.value);
+                            }
+                        }
+                    }
+                }
+
+                function calculateDuration() {
+                    if (startDateInput.value && endDateInput && endDateInput.value) {
+                        const start = new Date(startDateInput.value);
+                        const end = new Date(endDateInput.value);
+                        const timeDiff = end.getTime() - start.getTime();
+                        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+                        if (daysDiff >= 1 && durationInput) {
+                            durationInput.value = daysDiff;
+                        }
+                    }
+                    if (endDateInput && startDateInput.value) {
+                        endDateInput.setAttribute('min', startDateInput.value);
+                    }
+                }
+
+                if (durationInput) {
+                    durationInput.addEventListener('input', calculateDates);
+                }
+                
+                startDateInput.addEventListener('change', function() {
+                    if (durationInput && durationInput.value) {
+                        calculateDates();
+                    } else if (endDateInput && endDateInput.value) {
+                        calculateDuration();
+                    }
+                    if (endDateInput) {
+                        endDateInput.setAttribute('min', startDateInput.value);
+                    }
+                });
+                
+                if (endDateInput) {
+                    endDateInput.addEventListener('change', calculateDuration);
+                    if (startDateInput.value) {
+                        endDateInput.setAttribute('min', startDateInput.value);
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

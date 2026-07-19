@@ -10,7 +10,7 @@
 <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
     <strong class="me-2">🚨 ACTIVE EMERGENCY:</strong>
     {% for t in emergency_treks %}
-        <span class="badge bg-danger me-2">{{ t.name }} (ID: {{ t.id }})</span>
+    <span class="badge bg-danger me-2">{{ t.name }} (ID: {{ t.id }})</span>
     {% endfor %}
     <span class="ms-2">— Contact assigned staff immediately.</span>
 </div>
@@ -32,7 +32,7 @@
                 <h6 class="card-title text-muted">Staff Guides</h6>
                 <p class="display-6 fw-bold mb-0 text-primary">{{ total_staff }}</p>
                 {% if pending_staff > 0 %}
-                    <small class="text-warning fw-bold">{{ pending_staff }} pending approval</small>
+                <small class="text-warning fw-bold">{{ pending_staff }} pending approval</small>
                 {% endif %}
             </div>
         </div>

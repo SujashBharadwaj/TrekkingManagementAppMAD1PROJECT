@@ -256,5 +256,48 @@
         </div>
     </div>
 </div>
+</div>
 {% endif %}
+
+<!-- Chart.js Section -->
+<h4 class="mb-3 mt-4">My Trekking Analytics</h4>
+<div class="row">
+    <div class="col-md-6 mb-5">
+        <div class="card border">
+            <div class="card-body">
+                <canvas id="userChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('userChart').getContext('2d');
+    const userChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Upcoming', 'Completed', 'Cancelled'],
+            datasets: [{
+                label: 'Trekking History',
+                data: [{{ upcoming|length }}, {{ completed|length }}, {{ cancelled|length }}],
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(255, 99, 132, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+</script>
 {% endblock %}

@@ -85,4 +85,38 @@
         </div>
     {% endif %}
 </div>
+
+{% if treks %}
+<!-- Chart.js Section -->
+<h4 class="mb-3 mt-4">Participant Analytics</h4>
+<div class="card border mb-5">
+    <div class="card-body">
+        <canvas id="staffChart" width="400" height="100"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('staffChart').getContext('2d');
+    const staffChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [{% for t in treks %}"{{ t.name }} ({{ t.start_date.strftime('%b %d') }})",{% endfor %}],
+            datasets: [{
+                label: 'Registered Participants',
+                data: [{% for t in treks %}{{ t.capacity - t.available_slots if t.capacity else 10 - t.available_slots }},{% endfor %}],
+                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true, suggestedMax: 20 }
+            }
+        }
+    });
+</script>
+{% endif %}
+
 {% endblock %}

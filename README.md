@@ -120,25 +120,4 @@ trekking_manager/
 - **UI & Typography Enhancements**: Uses Copperplate Gothic for headers, and displays single vibrant scenery cards.
 - **Staff Attendance & Expenses**: Staff can mark trekker attendance and log on-ground expenses for admin reimbursement.
 
----
 
-## Viva Preparation Checklist
-
-### 1. How is the database created and seeded?
-* **Answer**: It is created programmatically using `db.create_all()` in `app.py`. The `seed_mock_data()` function generates a hashed password using `werkzeug.security.generate_password_hash` and inserts the default admin row along with sample staff, trekkers, treks, and bookings.
-
-### 2. How are roles and authorization guarded on routes?
-* **Answer**: Custom python decorators (`@login_required`, `@role_required`) in `routes/utils.py` check the active `session` variables. If the user session contains a forbidden role, it raises an HTTP 403 Forbidden abort or redirects to the login page.
-
-### 3. How is overbooking prevented?
-* **Answer**: In the backend booking route in `routes/trekker_routes.py`, we execute a transaction check:
-  1. Retrieve the trek by ID.
-  2. Confirm `trek.status` is strictly `'Open'`.
-  3. Validate that requested slots do not exceed `trek.available_slots`.
-  4. If validation passes, decrement `trek.available_slots` and write a new `Booking` record with status `'Booked'`.
-
-### 4. How does search and filtering function without JS?
-* **Answer**: HTML form inputs use GET method to submit parameters to `/search`. The backend parses query parameters using `request.args.get()`, filters the database tables dynamically using SQLAlchemy `.filter()`, and renders the target template with the results.
-
-### 5. Why did you use Flask Blueprints?
-* **Answer**: To separate concerns. Each role (admin, staff, trekker) has its own route file, making the codebase modular, easier to maintain, and scalable for team collaboration.

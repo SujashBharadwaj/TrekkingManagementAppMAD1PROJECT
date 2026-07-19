@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Treks - M&M{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="border-bottom pb-2">Search & Filter Treks</h1>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Filter Sidebar (Left Column) -->
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Filter Options</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('trekker.search_treks') }}" method="GET">
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="location" name="location" placeholder="E.g. Manali" value="{{ location }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="difficulty" class="form-label">Difficulty Level</label>
+                        <select class="form-select" id="difficulty" name="difficulty">
+                            <option value="">-- All Levels --</option>
+                            <option value="Easy" {% if difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+                            <option value="Moderate" {% if difficulty == 'Moderate' %}selected{% endif %}>Moderate</option>
+                            <option value="Hard" {% if difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Apply Filters</button>
+                        {% if location or difficulty %}
+                            <a href="{{ url_for('trekker.search_treks') }}" class="btn btn-outline-secondary">Clear All</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search Results (Right Column) -->
+    <div class="col-md-9">
+        <div class="row">
+            {% if treks %}
+                {% for trek in treks %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100 trek-card shadow-sm">
+                            {% if trek.photos %}
+                                <img src="{{ url_for('static', filename='uploads/photos/' + trek.photos[0].filename) }}" class="card-img-top" alt="{{ trek.name }}" style="height: 180px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <span class="badge {% if trek.difficulty == 'Easy' %}bg-success{% elif trek.difficulty == 'Moderate' %}bg-warning text-dark{% else %}bg-danger{% endif %} mb-2">
+                                    {{ trek.difficulty }}
+                                </span>
+                                <h5 class="card-title">{{ trek.name }}</h5>
+                                <p class="card-text text-muted">📍 Location: {{ trek.location }}</p>
+                                <p class="card-text">
+                                    <strong>Duration:</strong> {{ trek.duration }} days<br>
+                                    <strong>Price:</strong> ₹{{ "%.2f"|format(trek.price) }}<br>
+                                    <strong>Slots:</strong> {{ trek.available_slots }} / {{ trek.total_slots }} available<br>
+                                    <strong>Dates:</strong> {{ trek.start_date|ddmmyyyy }} to {{ trek.end_date|ddmmyyyy }}
+                                </p>
+                                {% if trek.reviews %}
+                                    <p class="card-text mb-0">
+                                        {% set avg = (trek.reviews | map(attribute='rating') | list | sum) / (trek.reviews | length) %}
+                                        {% for i in range(1, 6) %}
+                                            {% if i <= avg|round(0, 'floor')|int %}⭐{% else %}☆{% endif %}
+                                        {% endfor %}
+                                        <small class="text-muted">({{ trek.reviews|length }})</small>
+                                    </p>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer bg-white border-top-0 d-grid">
+                                <form action="{{ url_for('trekker.book_trek', id=trek.id) }}" method="POST">
+                                    <div class="input-group">
+                                        <span class="input-group-text">Slots</span>
+                                        <input type="number" name="slots" value="1" min="1" max="{{ trek.available_slots }}" class="form-control" required>
+                                        <button type="submit" class="btn btn-primary">Book Trek</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-warning py-3 text-center">
+                        No active open treks matched your filters. Adjust your filters or location keyword.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Itinerary - {{ trek.name }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Treks</a>
+</div>
+
+<h2>📋 {{ trek.name }} - Itinerary</h2>
+<p class="text-muted">
+    📍 {{ trek.location }} · {{ trek.duration }} days
+    {% if trek.route_kms %} · {{ trek.route_kms }} km total{% endif %}
+    {% if trek.exit_points %} · Exit points: {{ trek.exit_points }}{% endif %}
+</p>
+
+{% if items %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Day</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Distance (km)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td><strong>Day {{ item.day_number }}</strong></td>
+                        <td>{{ item.title }}</td>
+                        <td>{{ item.description or '-' }}</td>
+                        <td>{{ item.distance_km or '-' }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info">Itinerary has not been published yet for this trek.</div>
+{% endif %}
+
+{% if trek.travel_included %}
+    <div class="alert alert-success">✅ Travel/transport is included in the trek price.</div>
+{% else %}
+    <div class="alert alert-warning">⚠️ Travel/transport is NOT included. You need to arrange your own travel to the base camp.</div>
+{% endif %}
+{% endblock %}

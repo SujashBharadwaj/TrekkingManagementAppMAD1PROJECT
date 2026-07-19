@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply as Staff - Mountains & Maggi{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <h2>🎒 Apply as Trek Staff</h2>
+        <p class="text-muted">Share your experience and credentials. Our management team will review your application.</p>
+
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Aadhar Number / Passport ID *</label>
+                <input type="text" name="aadhar" class="form-control" required maxlength="50" placeholder="e.g. 1234-5678-9012">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Home Region *</label>
+                <input type="text" name="region" class="form-control" required maxlength="100" placeholder="e.g. Kullu, Himachal Pradesh">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Certifications (if any)</label>
+                <input type="text" name="certification" class="form-control" maxlength="200" placeholder="e.g. Basic Mountaineering Course, First Aid">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Experience Level *</label>
+                <select name="level" class="form-select" required>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Submit Application</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

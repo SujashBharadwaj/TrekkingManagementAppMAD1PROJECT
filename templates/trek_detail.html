@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ trek.name }} - Mountains & Maggi{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Treks</a>
+</div>
+
+<div class="row">
+    <!-- Left: Trek Info -->
+    <div class="col-md-8">
+        {% if approved_photos and approved_photos|length >= 2 %}
+            <img src="{{ url_for('static', filename='uploads/photos/' + approved_photos[1].filename) }}" class="img-fluid rounded mb-3" alt="{{ trek.name }}" style="max-height: 400px; width: 100%; object-fit: cover;">
+        {% elif approved_photos %}
+            <img src="{{ url_for('static', filename='uploads/photos/' + approved_photos[0].filename) }}" class="img-fluid rounded mb-3" alt="{{ trek.name }}" style="max-height: 400px; width: 100%; object-fit: cover;">
+        {% else %}
+            <div class="rounded mb-3 d-flex align-items-center justify-content-center" style="height: 300px; background: linear-gradient(135deg, #1a5276, #48c9b0); color: white;">
+                <h2 class="m-0 text-center px-2">{{ trek.name }}</h2>
+            </div>
+        {% endif %}
+
+        <h2>{{ trek.name }}</h2>
+        <p class="text-muted">📍 {{ trek.location }} · {{ trek.region }} India</p>
+
+        <p>{{ trek.description }}</p>
+
+        <!-- Quick Info Grid -->
+        <div class="row mb-4">
+            <div class="col-6 col-md-3 mb-2">
+                <div class="card text-center p-2 shadow-sm">
+                    <small class="text-muted">Duration</small>
+                    <strong>{{ trek.duration }} days</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+                <div class="card text-center p-2 shadow-sm">
+                    <small class="text-muted">Distance</small>
+                    <strong>{{ trek.route_kms or '-' }} km</strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+                <div class="card text-center p-2 shadow-sm">
+                    <small class="text-muted">Difficulty</small>
+                    <strong>
+                        <span class="badge {% if trek.difficulty == 'Easy' %}bg-success{% elif trek.difficulty == 'Moderate' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                            {{ trek.difficulty }}
+                        </span>
+                    </strong>
+                </div>
+            </div>
+            <div class="col-6 col-md-3 mb-2">
+                <div class="card text-center p-2 shadow-sm">
+                    <small class="text-muted">Season</small>
+                    <strong>{{ trek.best_season or 'All year' }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Base Camp Logistics -->
+        {% if trek.base_camp_info %}
+            <div class="card mb-4 border-primary shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">🚍 Base Camp Logistics</h5>
+                    <p class="card-text mb-0">{{ trek.base_camp_info }}</p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Visual Route Progress Trail -->
+        <div class="mb-4">
+            <h5 class="mb-3">🗺️ Trek Route Progress Trail</h5>
+            <div class="route-trail-container p-3 bg-light rounded shadow-sm border">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="route-node text-center p-2 bg-white rounded border border-primary shadow-sm" style="min-width: 110px;">
+                        <span class="badge bg-primary mb-1">Start</span>
+                        <div class="small fw-bold">Base Camp</div>
+                    </div>
+                    
+                    {% if items %}
+                        {% for item in items %}
+                            <div class="text-muted">&rarr;</div>
+                            {% set is_exit = false %}
+                            {% if trek.exit_points %}
+                                {% for pt in trek.exit_points.split(',') %}
+                                    {% if pt.strip().lower() in item.title.lower() %}
+                                        {% set is_exit = true %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            
+                            <div class="route-node text-center p-2 bg-white rounded border {% if is_exit %}border-warning{% else %}border-secondary{% endif %} shadow-sm" style="min-width: 120px;">
+                                <span class="badge {% if is_exit %}bg-warning text-dark{% else %}bg-secondary{% endif %} mb-1">Day {{ item.day_number }}</span>
+                                <div class="small fw-bold text-truncate" style="max-width: 110px;" title="{{ item.title }}">{{ item.title }}</div>
+                                {% if is_exit %}
+                                    <div class="text-danger fw-semibold" style="font-size: 0.7rem;">🚪 Exit Point</div>
+                                {% else %}
+                                    <div class="text-muted" style="font-size: 0.7rem;">No Exit</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-muted">&rarr;</div>
+                        <div class="route-node text-center p-2 bg-white rounded border border-secondary shadow-sm" style="min-width: 110px;">
+                            <span class="badge bg-secondary mb-1">End</span>
+                            <div class="small fw-bold">Summit</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Route & Exit Points -->
+        {% if trek.exit_points %}
+            <div class="mb-4">
+                <h6>🚪 All Registered Exit Points</h6>
+                <p>
+                    {% for point in trek.exit_points.split(',') %}
+                        <span class="badge bg-light text-dark border me-1">{{ point.strip() }}</span>
+                    {% endfor %}
+                </p>
+            </div>
+        {% endif %}
+
+        <!-- Travel Inclusion -->
+        <div class="mb-3">
+            {% if trek.travel_included %}
+                <div class="alert alert-success py-2 mb-2">✅ Travel/transport to base camp is <strong>included</strong> in the price.</div>
+            {% else %}
+                <div class="alert alert-warning py-2 mb-2">⚠️ Travel/transport is <strong>NOT included</strong>. You need to arrange your own travel to the base camp.</div>
+            {% endif %}
+        </div>
+
+        <!-- Insurance Info -->
+        <div class="alert alert-info py-2 mb-3">
+            🛡️ <strong>Insurance:</strong> Optional trek insurance is available at ₹500 per slot. Covers medical evacuation and trip cancellation.
+        </div>
+
+        <!-- Itinerary Toggle -->
+        {% if items %}
+            <button class="btn btn-outline-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#itinerarySection">
+                📋 View Day-by-Day Itinerary Details
+            </button>
+            <div class="collapse" id="itinerarySection">
+                <div class="card card-body">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>Title</th>
+                                <th>Description</th>
+                                <th>Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                                <tr>
+                                    <td><strong>Day {{ item.day_number }}</strong></td>
+                                    <td>{{ item.title }}</td>
+                                    <td>{{ item.description or '-' }}</td>
+                                    <td>{{ item.distance_km or '-' }} km</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% else %}
+            <p class="text-muted"><em>Day-by-day itinerary has not been published yet for this trek.</em></p>
+        {% endif %}
+
+        <!-- Reviews -->
+        {% if trek.reviews %}
+            <h5 class="mt-4">⭐ Reviews</h5>
+            {% for review in trek.reviews %}
+                <div class="card mb-2 shadow-sm">
+                    <div class="card-body py-2">
+                        <strong>{{ review.user.username }}</strong>
+                        <span class="ms-1">
+                        {% for i in range(1, 6) %}
+                            {% if i <= review.rating %}⭐{% else %}☆{% endif %}
+                        {% endfor %}
+                        </span>
+                        {% if review.comment %}
+                            <p class="mb-0 mt-1 text-muted">{{ review.comment }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Right: Booking Sidebar -->
+    <div class="col-md-4">
+        <div class="card shadow-sm sticky-top" style="top: 80px;">
+            <div class="card-body">
+                <h5 class="card-title">Book This Trek</h5>
+                <hr>
+                <p><strong>Price:</strong> ₹{{ "%.0f"|format(trek.price) }} / person</p>
+                <p><strong>Dates:</strong> {{ trek.start_date|ddmmyyyy }} to {{ trek.end_date|ddmmyyyy }}</p>
+                <p><strong>Slots Available:</strong> {{ trek.available_slots }} / {{ trek.total_slots }}</p>
+
+                {% if trek.status == 'Open' and session.get('role') == 'trekker' %}
+                    <button type="button" class="btn btn-success w-100 mb-2 py-2 fs-5 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                        🎒 Book Now
+                    </button>
+                {% elif not session.get('user_id') %}
+                    <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-outline-primary w-100">Login to Book</a>
+                {% elif trek.status != 'Open' %}
+                    <button class="btn btn-secondary w-100" disabled>Trek Not Open</button>
+                {% endif %}
+
+                {% if alternate_dates %}
+                    <hr>
+                    <h6>📅 Other Available Dates</h6>
+                    {% for alt in alternate_dates %}
+                        <a href="{{ url_for('main.trek_detail', id=alt.id) }}" class="btn btn-outline-secondary btn-sm w-100 mb-2">
+                            {{ alt.start_date|ddmmyyyy }} - {{ alt.available_slots }} slots left
+                        </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment/Booking Modal -->
+{% if trek.status == 'Open' and session.get('role') == 'trekker' %}
+<div class="modal fade" id="bookingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">🎒 Complete Your Booking</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('trekker.book_trek', id=trek.id) }}" method="POST">
+                <div class="modal-body p-4">
+                    
+                    <h6 class="border-bottom pb-2 mb-3">Booking Details</h6>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Number of Slots</label>
+                        <input type="number" name="slots" id="modal-slots" value="1" min="1" max="{{ trek.available_slots }}" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Discount Code (Feature #7)</label>
+                        <input type="text" name="discount_code" class="form-control text-uppercase" placeholder="Got a promo code?">
+                    </div>
+
+                    <div class="form-check mb-4 bg-light p-3 border rounded shadow-sm">
+                        <input type="checkbox" name="insurance" class="form-check-input ms-0 me-2" id="modal-insurance">
+                        <label class="form-check-label fw-bold text-primary" for="modal-insurance">Add Comprehensive Trek Insurance</label>
+                        <p class="small text-muted mb-0 mt-1 ms-4">Covers medical evacuation, altitude sickness, and trip cancellation for ₹500/slot.</p>
+                    </div>
+
+                    <h6 class="border-bottom pb-2 mb-3 mt-4">Participant Information (Feature #15)</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Medical Information <span class="text-muted">(Optional)</span></label>
+                        <textarea name="medical_info" class="form-control" rows="2" placeholder="Asthma, allergies, past injuries..."></textarea>
+                        <small class="text-muted">Strictly confidential. Shared only with your assigned guide.</small>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Dietary Requirements <span class="text-muted">(Optional)</span></label>
+                        <input type="text" name="dietary_needs" class="form-control" placeholder="E.g., Vegan, Jain, Gluten-free">
+                    </div>
+
+                    <hr>
+                    <div class="bg-light p-3 rounded">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Base Price (₹{{ "%.0f"|format(trek.price) }} &times; <span id="modal-slot-count">1</span>):</span>
+                            <strong>₹<span id="modal-base-total">{{ "%.0f"|format(trek.price) }}</span></strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 text-primary" id="modal-insurance-line" style="display:none !important;">
+                            <span>Insurance (₹500 &times; <span id="modal-ins-slots">1</span>):</span>
+                            <strong>+ ₹<span id="modal-ins-total">500</span></strong>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-0 text-success">Estimated Total:</h5>
+                            <h5 class="mb-0 text-success">₹<span id="modal-grand-total">{{ "%.0f"|format(trek.price) }}</span></h5>
+                        </div>
+                        <small class="text-muted d-block mt-2 text-end">Discount code will be applied after submission.</small>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success px-4">Confirm & Book</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const slotsInput = document.getElementById('modal-slots');
+        const insuranceCheck = document.getElementById('modal-insurance');
+        const basePrice = {{ trek.price }};
+
+        function updateTotal() {
+            const slots = parseInt(slotsInput.value) || 1;
+            const hasIns = insuranceCheck.checked;
+            const base = basePrice * slots;
+            const ins = hasIns ? 500 * slots : 0;
+
+            document.getElementById('modal-slot-count').textContent = slots;
+            document.getElementById('modal-base-total').textContent = base;
+            document.getElementById('modal-ins-slots').textContent = slots;
+            document.getElementById('modal-ins-total').textContent = ins;
+            document.getElementById('modal-grand-total').textContent = base + ins;
+            
+            // Use block !important to override the inline style if needed, but flex is better
+            const insLine = document.getElementById('modal-insurance-line');
+            if (hasIns) {
+                insLine.style.setProperty('display', 'flex', 'important');
+            } else {
+                insLine.style.setProperty('display', 'none', 'important');
+            }
+        }
+
+        slotsInput.addEventListener('input', updateTotal);
+        insuranceCheck.addEventListener('change', updateTotal);
+    });
+</script>
+{% endif %}
+{% endblock %}

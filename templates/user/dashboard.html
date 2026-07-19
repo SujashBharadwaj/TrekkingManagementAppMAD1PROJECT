@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block title %}My Dashboard - Mountains & Maggi{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2">
+        <h1>My Dashboard</h1>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">🏔️ Explore Treks</a>
+    </div>
+</div>
+
+<!-- ===== ANNOUNCEMENTS ===== -->
+{% set has_announcements = false %}
+{% for booking in upcoming %}
+    {% if booking.trek.announcements %}
+        {% set has_announcements = true %}
+    {% endif %}
+{% endfor %}
+
+{% if has_announcements %}
+<div class="row mb-5">
+    <div class="col-12">
+        <h4 class="mb-3 text-info">📢 Trek Announcements</h4>
+        <div class="list-group">
+            {% for booking in upcoming %}
+                {% for ann in booking.trek.announcements %}
+                <div class="list-group-item list-group-item-action list-group-item-info flex-column align-items-start border-info mb-2 rounded">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1 text-dark"><strong>{{ booking.trek.name }}:</strong> {{ ann.title }}</h6>
+                        <small class="text-muted">{{ ann.created_at.strftime('%d %b') }}</small>
+                    </div>
+                    <p class="mb-1 small text-dark">{{ ann.message }}</p>
+                </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<!-- ===== UPCOMING TREKS ===== -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h3 class="mb-3">📅 Upcoming Treks</h3>
+        {% if upcoming %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Trek</th>
+                            <th>Dates</th>
+                            <th>Slots</th>
+                            <th>Insurance</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in upcoming %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('main.trek_detail', id=booking.trek.id) }}" class="fw-bold text-decoration-none">
+                                        {{ booking.trek.name }}
+                                    </a>
+                                    <br>
+                                    <span class="badge {% if booking.trek.difficulty == 'Easy' %}bg-success{% elif booking.trek.difficulty == 'Moderate' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                        {{ booking.trek.difficulty }}
+                                    </span>
+                                </td>
+                                <td>{{ booking.trek.start_date|ddmmyyyy }} to {{ booking.trek.end_date|ddmmyyyy }}</td>
+                                <td>{{ booking.slots_booked }}</td>
+                                <td>
+                                    {% if booking.has_insurance %}
+                                        <span class="badge bg-success">✅ Yes</span>
+                                    {% else %}
+                                        <span class="text-muted">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    ₹{{ "%.0f"|format(booking.total_price) }}
+                                    {% if booking.discount_amount > 0 %}
+                                        <br><small class="text-success">-₹{{ "%.0f"|format(booking.discount_amount) }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column gap-1">
+                                        <!-- Toggle Insurance -->
+                                        <form action="{{ url_for('trekker.toggle_insurance', id=booking.id) }}" method="POST">
+                                            <button type="submit" class="btn btn-outline-info btn-sm w-100">
+                                                {% if booking.has_insurance %}Remove Insurance{% else %}Add Insurance{% endif %}
+                                            </button>
+                                        </form>
+
+                                        <!-- Change Date (if recurring) -->
+                                        {% if booking.id in recurring_map %}
+                                            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#change-date-{{ booking.id }}">📅 Change Date</button>
+                                        {% endif %}
+
+                                        <!-- Cancel -->
+                                        <form action="{{ url_for('trekker.cancel_booking', id=booking.id) }}" method="POST" onsubmit="return confirm('Cancel this booking? A refund will be processed.');">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">Cancel</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Change Date Collapse Row -->
+                            {% if booking.id in recurring_map %}
+                                <tr>
+                                    <td colspan="6" class="p-0 border-0">
+                                        <div class="collapse" id="change-date-{{ booking.id }}">
+                                            <div class="card card-body border-0 bg-light m-2 p-3">
+                                                <p class="mb-2"><strong>Move to a different batch of {{ booking.trek.name }}:</strong></p>
+                                                <form action="{{ url_for('trekker.change_date', id=booking.id) }}" method="POST" class="d-flex gap-2 align-items-center">
+                                                    <select name="new_trek_id" class="form-select form-select-sm" style="max-width: 300px;" required>
+                                                        {% for alt in recurring_map[booking.id] %}
+                                                            <option value="{{ alt.id }}">{{ alt.start_date|ddmmyyyy }} - {{ alt.available_slots }} slots left</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Confirm</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info border-info">No upcoming treks. <a href="{{ url_for('main.index') }}" class="alert-link">Browse treks</a> to book one!</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== COMPLETED TREKS ===== -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h3 class="mb-3">✅ Completed Treks</h3>
+        {% if completed %}
+            {% for booking in completed %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5>
+                                    <a href="{{ url_for('main.trek_detail', id=booking.trek.id) }}" class="text-decoration-none">{{ booking.trek.name }}</a>
+                                </h5>
+                                <p class="text-muted mb-1">📍 {{ booking.trek.location }} · {{ booking.trek.start_date|ddmmyyyy }} to {{ booking.trek.end_date|ddmmyyyy }}</p>
+                                <p class="mb-0">
+                                    <strong>Slots:</strong> {{ booking.slots_booked }} ·
+                                    <strong>Paid:</strong> ₹{{ "%.0f"|format(booking.total_price or booking.trek.price * booking.slots_booked) }}
+                                    {% if booking.has_insurance %} · <span class="badge bg-success">Insured</span>{% endif %}
+                                </p>
+                            </div>
+                            <span class="badge bg-info text-dark">Completed</span>
+                        </div>
+
+                        <hr>
+
+                        <!-- Trek Review -->
+                        {% if booking.trek_id not in reviewed_trek_ids %}
+                            <div class="mb-3">
+                                <h6>⭐ Rate this Trek</h6>
+                                <form action="{{ url_for('trekker.submit_review', id=booking.trek_id) }}" method="POST" class="row g-2 align-items-end">
+                                    <div class="col-auto">
+                                        <select name="rating" class="form-select form-select-sm" required>
+                                            <option value="">Rating</option>
+                                            <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                                            <option value="4">⭐⭐⭐⭐ (4)</option>
+                                            <option value="3">⭐⭐⭐ (3)</option>
+                                            <option value="2">⭐⭐ (2)</option>
+                                            <option value="1">⭐ (1)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <input type="text" name="comment" class="form-control form-control-sm" placeholder="Comment (optional)" maxlength="{{ limits.review_comment_max }}">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button type="submit" class="btn btn-primary btn-sm">Submit Trek Review</button>
+                                    </div>
+                                </form>
+                            </div>
+                        {% else %}
+                            <p class="text-success mb-2 small"><i class="fas fa-check-circle"></i> Trek reviewed</p>
+                        {% endif %}
+
+                        <!-- Staff Review -->
+                        {% if booking.trek.assigned_staff_id %}
+                            {% set staff_key = (booking.trek.assigned_staff_id, booking.trek_id) %}
+                            {% if staff_key not in reviewed_staff_ids %}
+                                <div class="mb-2">
+                                    <h6>👤 Rate Your Guide: {{ booking.trek.assigned_staff.staff_profile.name if booking.trek.assigned_staff.staff_profile else booking.trek.assigned_staff.username }}</h6>
+                                    <form action="{{ url_for('trekker.rate_staff', trek_id=booking.trek_id) }}" method="POST" class="row g-2 align-items-end">
+                                        <div class="col-auto">
+                                            <select name="staff_rating" class="form-select form-select-sm" required>
+                                                <option value="">Rating</option>
+                                                <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                                                <option value="4">⭐⭐⭐⭐ (4)</option>
+                                                <option value="3">⭐⭐⭐ (3)</option>
+                                                <option value="2">⭐⭐ (2)</option>
+                                                <option value="1">⭐ (1)</option>
+                                            </select>
+                                        </div>
+                                        <div class="col">
+                                            <input type="text" name="staff_comment" class="form-control form-control-sm" placeholder="Comment on your guide (optional)">
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="submit" class="btn btn-outline-primary btn-sm">Submit Guide Review</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <p class="text-success mb-2 small"><i class="fas fa-check-circle"></i> Guide reviewed</p>
+                            {% endif %}
+                        {% endif %}
+
+                        <!-- Photo Upload -->
+                        <div class="mt-3 border-top pt-2">
+                            <form action="{{ url_for('trekker.trekker_upload_photo', id=booking.trek_id) }}" method="POST" enctype="multipart/form-data">
+                                <div class="input-group input-group-sm w-75">
+                                    <input type="file" class="form-control" name="photo" accept=".png,.jpg,.jpeg" required>
+                                    <button type="submit" class="btn btn-outline-primary">Upload Photo</button>
+                                </div>
+                                <small class="text-muted">Share your trek photos (.png, .jpg, .jpeg, max 2MB)</small>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-light border">No completed treks yet. Keep trekking!</div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ===== CANCELLED (collapsed summary) ===== -->
+{% if cancelled %}
+<div class="row mb-4">
+    <div class="col-12">
+        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#cancelledSection">
+            Show {{ cancelled|length }} Cancelled Booking(s)
+        </button>
+        <div class="collapse mt-2" id="cancelledSection">
+            <ul class="list-group">
+                {% for booking in cancelled %}
+                    <li class="list-group-item d-flex justify-content-between text-muted">
+                        <span>{{ booking.trek.name }} · {{ booking.trek.start_date|ddmmyyyy }}</span>
+                        <span class="badge bg-secondary">Cancelled</span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

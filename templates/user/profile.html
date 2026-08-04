@@ -5,12 +5,9 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('trekker.user_dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Profile Settings</li>
-            </ol>
-        </nav>
+        <div class="mb-3">
+            <a href="{{ url_for('trekker.user_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Dashboard</a>
+        </div>
         
         <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">

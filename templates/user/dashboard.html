@@ -6,7 +6,7 @@
 <div class="row mb-4">
     <div class="col-12 d-flex justify-content-between align-items-center border-bottom pb-2">
         <h1>My Dashboard</h1>
-        <a href="{{ url_for('main.index') }}" class="btn btn-primary">🏔️ Explore Treks</a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary">Explore Treks</a>
     </div>
 </div>
 
@@ -21,7 +21,7 @@
 {% if has_announcements %}
 <div class="row mb-5">
     <div class="col-12">
-        <h4 class="mb-3 text-info">📢 Trek Announcements</h4>
+        <h4 class="mb-3 text-info">Trek Announcements</h4>
         <div class="list-group">
             {% for booking in upcoming %}
                 {% for ann in booking.trek.announcements %}
@@ -43,7 +43,7 @@
 <!-- ===== UPCOMING TREKS ===== -->
 <div class="row mb-5">
     <div class="col-12">
-        <h3 class="mb-3">📅 Upcoming Treks</h3>
+        <h3 class="mb-3">Upcoming Treks</h3>
         {% if upcoming %}
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle">
@@ -73,16 +73,13 @@
                                 <td>{{ booking.slots_booked }}</td>
                                 <td>
                                     {% if booking.has_insurance %}
-                                        <span class="badge bg-success">✅ Yes</span>
+                                        <span class="badge bg-success">Yes</span>
                                     {% else %}
                                         <span class="text-muted">No</span>
                                     {% endif %}
                                 </td>
                                 <td>
                                     ₹{{ "%.0f"|format(booking.total_price) }}
-                                    {% if booking.discount_amount > 0 %}
-                                        <br><small class="text-success">-₹{{ "%.0f"|format(booking.discount_amount) }}</small>
-                                    {% endif %}
                                 </td>
                                 <td>
                                     <div class="d-flex flex-column gap-1">
@@ -95,7 +92,7 @@
 
                                         <!-- Change Date (if recurring) -->
                                         {% if booking.id in recurring_map %}
-                                            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#change-date-{{ booking.id }}">📅 Change Date</button>
+                                            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#change-date-{{ booking.id }}">Change Date</button>
                                         {% endif %}
 
                                         <!-- Cancel -->
@@ -139,7 +136,7 @@
 <!-- ===== COMPLETED TREKS ===== -->
 <div class="row mb-5">
     <div class="col-12">
-        <h3 class="mb-3">✅ Completed Treks</h3>
+        <h3 class="mb-3">Completed Treks</h3>
         {% if completed %}
             {% for booking in completed %}
                 <div class="card mb-3 shadow-sm">
@@ -149,7 +146,7 @@
                                 <h5>
                                     <a href="{{ url_for('main.trek_detail', id=booking.trek.id) }}" class="text-decoration-none">{{ booking.trek.name }}</a>
                                 </h5>
-                                <p class="text-muted mb-1">📍 {{ booking.trek.location }} · {{ booking.trek.start_date|ddmmyyyy }} to {{ booking.trek.end_date|ddmmyyyy }}</p>
+                                <p class="text-muted mb-1">{{ booking.trek.location }} · {{ booking.trek.start_date|ddmmyyyy }} to {{ booking.trek.end_date|ddmmyyyy }}</p>
                                 <p class="mb-0">
                                     <strong>Slots:</strong> {{ booking.slots_booked }} ·
                                     <strong>Paid:</strong> ₹{{ "%.0f"|format(booking.total_price or booking.trek.price * booking.slots_booked) }}
@@ -164,16 +161,16 @@
                         <!-- Trek Review -->
                         {% if booking.trek_id not in reviewed_trek_ids %}
                             <div class="mb-3">
-                                <h6>⭐ Rate this Trek</h6>
+                                <h6>Rate this Trek</h6>
                                 <form action="{{ url_for('trekker.submit_review', id=booking.trek_id) }}" method="POST" class="row g-2 align-items-end">
                                     <div class="col-auto">
                                         <select name="rating" class="form-select form-select-sm" required>
                                             <option value="">Rating</option>
-                                            <option value="5">⭐⭐⭐⭐⭐ (5)</option>
-                                            <option value="4">⭐⭐⭐⭐ (4)</option>
-                                            <option value="3">⭐⭐⭐ (3)</option>
-                                            <option value="2">⭐⭐ (2)</option>
-                                            <option value="1">⭐ (1)</option>
+                                            <option value="5">5 Stars</option>
+                                            <option value="4">4 Stars</option>
+                                            <option value="3">3 Stars</option>
+                                            <option value="2">2 Stars</option>
+                                            <option value="1">1 Star</option>
                                         </select>
                                     </div>
                                     <div class="col">
@@ -193,16 +190,16 @@
                             {% set staff_key = (booking.trek.assigned_staff_id, booking.trek_id) %}
                             {% if staff_key not in reviewed_staff_ids %}
                                 <div class="mb-2">
-                                    <h6>👤 Rate Your Guide: {{ booking.trek.assigned_staff.staff_profile.name if booking.trek.assigned_staff.staff_profile else booking.trek.assigned_staff.username }}</h6>
+                                    <h6>Rate Your Guide: {{ booking.trek.assigned_staff.staff_profile.name if booking.trek.assigned_staff.staff_profile else booking.trek.assigned_staff.username }}</h6>
                                     <form action="{{ url_for('trekker.rate_staff', trek_id=booking.trek_id) }}" method="POST" class="row g-2 align-items-end">
                                         <div class="col-auto">
                                             <select name="staff_rating" class="form-select form-select-sm" required>
                                                 <option value="">Rating</option>
-                                                <option value="5">⭐⭐⭐⭐⭐ (5)</option>
-                                                <option value="4">⭐⭐⭐⭐ (4)</option>
-                                                <option value="3">⭐⭐⭐ (3)</option>
-                                                <option value="2">⭐⭐ (2)</option>
-                                                <option value="1">⭐ (1)</option>
+                                                <option value="5">5 Stars</option>
+                                                <option value="4">4 Stars</option>
+                                                <option value="3">3 Stars</option>
+                                                <option value="2">2 Stars</option>
+                                                <option value="1">1 Star</option>
                                             </select>
                                         </div>
                                         <div class="col">

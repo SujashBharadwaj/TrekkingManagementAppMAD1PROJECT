@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from datetime import datetime, date
 from sqlalchemy import func
 from models import (db, User, StaffProfile, Trek, Booking, TrekPhoto, Expense,
-                    SafetyGuide, StaffPayout)
+                    StaffPayout, StaffApplication)
 from .utils import login_required, role_required, LIMITS, _safe_int, _truncate, allowed_file, save_photo
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -18,9 +18,6 @@ def admin_dashboard():
     total_bookings = Booking.query.count()
     pending_staff = User.query.filter_by(role='staff', status='pending').count()
 
-    # Feature #14: Check for any treks in Emergency status
-    emergency_treks = Trek.query.filter_by(status='Emergency').all()
-
     # Quick revenue stat
     total_revenue = db.session.query(func.sum(Booking.total_price)).filter(
         Booking.status.in_(['Booked', 'Completed'])
@@ -31,7 +28,7 @@ def admin_dashboard():
     return render_template('admin/dashboard.html',
         total_treks=total_treks, total_users=total_users,
         total_staff=total_staff, total_bookings=total_bookings,
-        pending_staff=pending_staff, emergency_treks=emergency_treks,
+        pending_staff=pending_staff,
         total_revenue=total_revenue, pending_expenses=pending_expenses)
 
 
@@ -63,12 +60,9 @@ def admin_treks():
         if t.difficulty in difficulty_counts:
             difficulty_counts[t.difficulty] += 1
 
-    safety_guides = SafetyGuide.query.all()
-
     return render_template('admin/treks.html',
         treks=treks, approved_staff=approved_staff,
-        search=search, difficulty_counts=difficulty_counts,
-        safety_guides=safety_guides)
+        search=search, difficulty_counts=difficulty_counts)
 
 
 @admin_bp.route('/trek/add', methods=['POST'])
@@ -138,7 +132,6 @@ def add_trek():
 def edit_trek(id):
     trek = db.session.get(Trek, id) or abort(404)
     approved_staff = User.query.filter_by(role='staff', status='active').all()
-    safety_guides = SafetyGuide.query.all()
 
     if request.method == 'POST':
         trek.name = _truncate(request.form.get('name', '').strip(), LIMITS['trek_name_max'])
@@ -198,11 +191,7 @@ def edit_trek(id):
         elif flat_salary == 0:
             trek.staff_flat_salary = None
 
-        # Feature #6: Safety guide assignment
-        guide_id = request.form.get('safety_guide_id', type=int)
-        trek.safety_guide_id = guide_id if guide_id and guide_id != 0 else None
-
-        # Feature #18: Gear checklist
+        # Gear checklist
         gear = request.form.get('gear_checklist', '').strip()
         trek.gear_checklist = gear if gear else None
 
@@ -214,8 +203,7 @@ def edit_trek(id):
         flash('Trek updated successfully.', 'success')
         return redirect(url_for('admin.admin_treks'))
 
-    return render_template('admin/edit_trek.html', trek=trek, approved_staff=approved_staff,
-                           safety_guides=safety_guides)
+    return render_template('admin/edit_trek.html', trek=trek, approved_staff=approved_staff)
 
 
 @admin_bp.route('/trek/delete/<int:id>', methods=['POST'])
@@ -271,6 +259,41 @@ def admin_staff():
 
     staff_list = query.all()
     return render_template('admin/staff.html', staff_list=staff_list, search=search)
+
+
+@admin_bp.route('/applications')
+@login_required
+@role_required('admin')
+def staff_applications():
+    applications = StaffApplication.query.filter_by(status='Pending').all()
+    return render_template('admin/applications.html', applications=applications)
+
+
+@admin_bp.route('/applications/<int:id>/handle', methods=['POST'])
+@login_required
+@role_required('admin')
+def handle_application(id):
+    app = StaffApplication.query.get_or_404(id)
+    action = request.form.get('action')
+    
+    if action == 'approve':
+        app.status = 'Approved'
+        user = User.query.get(app.user_id)
+        if user:
+            user.role = 'staff'
+            user.status = 'active'
+            profile = StaffProfile.query.filter_by(user_id=user.id).first()
+            if not profile:
+                profile = StaffProfile(user_id=user.id, name=user.username, home_region=app.region)
+                db.session.add(profile)
+        flash('Staff application approved.', 'success')
+    elif action == 'reject':
+        app.status = 'Rejected'
+        flash('Staff application rejected.', 'danger')
+        
+    db.session.commit()
+    return redirect(url_for('admin.staff_applications'))
+
 
 
 @admin_bp.route('/staff/approve/<int:id>', methods=['POST'])

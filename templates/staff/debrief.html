@@ -5,12 +5,9 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('staff.staff_dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Debrief (Trek #{{ trek.id }})</li>
-            </ol>
-        </nav>
+        <div class="mb-3">
+            <a href="{{ url_for('staff.staff_dashboard') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Dashboard</a>
+        </div>
 
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-secondary text-white">

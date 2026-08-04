@@ -1,6 +1,6 @@
 # Mountains & Maggi — Trekking Management Application
 
-A web-based platform for adventure organizations to manage treks, staff assignments, bookings, and trekker history. Built with Flask, Jinja2, Bootstrap 5, and SQLite.
+A web-based platform for adventure organizations to manage treks, staff assignments, bookings, expenses, and trekker history. Built with Flask, Jinja2, Bootstrap 5, and SQLite.
 
 ## Project Setup & Running
 
@@ -8,7 +8,7 @@ A web-based platform for adventure organizations to manage treks, staff assignme
 Ensure you have Python 3.8+ installed.
 
 ### 2. Project Setup
-From the `trekking_manager` root folder, create a virtual environment, activate it, and install the required packages:
+From the root folder, create a virtual environment, activate it, and install the required packages:
 
 ```bash
 # Create a virtual environment
@@ -28,53 +28,52 @@ python app.py
 ```
 This will automatically:
 - Create the SQLite database (`trekking.db`) if it doesn't exist.
-- Seed the database with mock data including the default admin account.
+- Seed the database with mock data including default admin, staff, and user accounts.
 - Start the server at `http://127.0.0.1:4200`.
 
-**Default Admin Credentials:**
-* **Username**: `admin`
-* **Password**: `adminisadmin@123?!?!`
-
-**Default Staff Credentials:**
-* **Username**: `staff1` or `staff2` | **Password**: `staff123`
-
-**Default Trekker Credentials:**
-* **Username**: `user1` through `user5` | **Password**: `user123`
+**Default Credentials:**
+* **Admin**: `admin` | **Password**: `admin123`
+* **Staff**: `staff1` or `staff2` | **Password**: `staff123`
+* **Trekker**: `user1` through `user5` | **Password**: `user123`
 
 ---
 
 ## Architecture
 
-The application follows the **Flask Blueprints** pattern for modularity:
+The application follows the **Flask Application Factory** pattern and **Flask Blueprints** for modularity:
 
 ```text
-trekking_manager/
+MAD - 1 Project/
 │
-├── app.py                  # App factory, blueprint registration, seed data
-├── models.py               # SQLAlchemy models (User, Trek, Booking, Review, TrekPhoto, StaffProfile)
-├── config.py               # Configuration (secret key, SQLite URI, upload settings)
+├── app.py                  # Application factory (create_app), blueprint registration, seed data
+├── models.py               # SQLAlchemy models (User, StaffProfile, Trek, Booking, Review, TrekPhoto, etc.)
+├── config.py               # Central configuration (Secret Key, DB URI, Upload Folder)
 │
-├── routes/                 # Flask Blueprints (modular route files)
+├── routes/                 # Flask Blueprints (Modular route handlers)
 │   ├── __init__.py         # Exports all blueprints
-│   ├── utils.py            # Shared decorators (login_required, role_required), helpers
-│   ├── auth_routes.py      # Login, Register, Logout
-│   ├── admin_routes.py     # Admin dashboard, trek/staff/user CRUD, photo uploads
-│   ├── staff_routes.py     # Staff workspace, trek editing, participants, photo uploads
-│   ├── trekker_routes.py   # Trekker dashboard, booking, search, reviews, photo uploads
-│   └── main_routes.py      # Public homepage
+│   ├── utils.py            # Shared decorators (login_required, role_required), validation helpers
+│   ├── auth_routes.py      # Authentication (Login, Register, Logout)
+│   ├── admin_routes.py     # Core Admin CRUD (Treks, Staff, Users, Bookings, Photos)
+│   ├── admin_finance_routes.py # Financial P&L breakdown and Payout logic
+│   ├── admin_ops_routes.py # Operations (Occupancy, Trek Cloning, Announcements)
+│   ├── staff_routes.py     # Staff Workspace & Trek editing
+│   ├── staff_ops_routes.py # Staff operations (Checklists, Gear checks, Debriefs, Availability)
+│   ├── trekker_routes.py   # Trekker Dashboard, Booking, Reviews, Staff Applications
+│   └── main_routes.py      # Public homepage & Trek detail pages
 │
 ├── static/
-│   ├── css/style.css       # Global CSS stylesheet
-│   └── uploads/photos/     # User-uploaded trek photos
+│   ├── css/style.css       # Global stylesheet
+│   └── uploads/photos/     # Trek image upload storage
 │
 └── templates/              # Jinja2 HTML templates
-    ├── base.html           # Global layout (navbar, alerts, footer)
-    ├── index.html           # Public homepage
-    ├── login.html           # Login form
-    ├── register.html        # Registration form
-    ├── admin/               # Admin panel templates
-    ├── staff/               # Staff panel templates
-    └── user/                # Trekker panel templates
+    ├── base.html           # Master layout template (Navbar, Alerts, Back Button, Footer)
+    ├── index.html          # Public Homepage with Trek search & filters
+    ├── trek_detail.html    # Detailed trek view & booking modal
+    ├── login.html          # Login view
+    ├── register.html       # Register view
+    ├── admin/              # Admin Panel templates (Dashboard, Treks, Financials, Occupancy, etc.)
+    ├── staff/              # Staff Panel templates (Workspace, Checklists, Debriefs, Local Connects, etc.)
+    └── user/               # Trekker Panel templates (Dashboard, Profile, Apply as Staff, etc.)
 ```
 
 ---
@@ -82,42 +81,40 @@ trekking_manager/
 ## Roles and Access Controls
 
 1. **Admin**:
-   - Manages all treks (Create, Read, Update, Delete).
-   - Approves newly registered staff profiles or blacklists/deactivates staff & users.
-   - Assigns approved staff members to treks.
-   - Uploads promotional photos for treks.
-   - Searches and views all treks, staff, users, and historical booking logs.
+   - Comprehensive control over all Treks (Create, Edit, Clone, Delete, Assign Staff).
+   - Approves staff applications and manages staff & trekker account statuses (Active, Pending, Blacklisted).
+   - Monitors per-trek Financials (Revenue, Expenses, Staff Payouts, Net P&L).
+   - Views Occupancy metrics and sends bulk announcements to booked trekkers.
+   - Moderates trek photo submissions.
+
 2. **Trek Staff**:
-   - Registration requires Admin approval status to gain access to the dashboard.
-   - Updates available slots, price, or description for their assigned treks.
-   - Views registered trekkers list for their treks.
-   - Uploads photos for assigned treks.
-   - Transitions trek status: `Pending` → `Approved` → `Open` → `Closed` → `Completed`.
+   - Access to dedicated Staff Workspace.
+   - Manages day-wise itinerary checklists, gear checklists, and local connects.
+   - Logs on-ground trek expenses for admin approval/reimbursement.
+   - Submits post-trek debrief reports (weather, trail conditions).
+   - Sets personal unavailability / time-off blocks.
+
 3. **User (Trekker)**:
-   - Registers and browses open treks.
-   - Filters treks by **location**, **difficulty**, and **best season** on the homepage.
-   - Views **day-wise itinerary** pages for treks (published by staff, approved by admin).
-   - Books treks with optional **insurance** add-on (₹500/slot). Sees total price breakdown.
-   - Views history of booked, cancelled, and completed treks with insurance/total details.
-   - Leaves ratings (1-5 stars) and comments for completed treks.
-   - Uploads photos for completed treks.
-   - Can **apply as staff** by submitting Aadhar/Passport, region, certifications, and experience level.
-   - Updates contact details and user profile.
+   - Browses open treks with filters for location, difficulty, region, and season.
+   - Books trek slots with optional comprehensive trek insurance (₹500/slot).
+   - Views upcoming and completed bookings, toggles insurance, or changes batch dates.
+   - Submits 1-5 star ratings and reviews for completed treks and staff guides.
+   - Can apply to become a staff guide by submitting credentials.
 
 ---
 
-## Features Beyond Core Requirements
+## Database Models Summary
 
-- **Photo Uploads**: Admin, Staff, and Trekkers can upload trek photos (.png, .jpg, .jpeg, max 2MB).
-- **Ratings & Reviews**: Trekkers can rate and review completed treks with 1-5 star ratings.
-- **Star Rating Display**: Average star ratings are displayed on trek cards across the application.
-- **Blueprint Architecture**: Codebase is modular with Flask Blueprints for scalability.
-- **Homepage Filtering**: Filter treks by region, difficulty level, and season without page reloads.
-- **Itinerary Pages**: Day-wise trek itineraries with distance per day, managed by staff and approved by admin.
-- **Insurance & Payment Details**: Users can opt into insurance at booking. Total price (base + insurance) is stored and displayed.
-- **Staff Application**: Trekkers can apply to become guides by submitting ID, region, certifications, and experience level.
-- **Travel Inclusion Indicator**: Each trek shows whether transport to the base camp is included in the price.
-- **UI & Typography Enhancements**: Uses Copperplate Gothic for headers, and displays single vibrant scenery cards.
-- **Staff Attendance & Expenses**: Staff can mark trekker attendance and log on-ground expenses for admin reimbursement.
-
-
+- `User`: Accounts for Admin, Staff, and Trekkers with hashed passwords.
+- `StaffProfile`: Extended metadata for staff members (home region, contact).
+- `Trek`: Trek details, slots, pricing, dates, region, and staff payout rules.
+- `Booking`: Slot transactions, insurance status, attendance, and medical/dietary notes.
+- `Review`: Ratings and feedback left by trekkers for completed treks.
+- `StaffReview`: Ratings and feedback given to staff guides by trekkers.
+- `Expense`: On-ground cash expenses logged by staff.
+- `StaffPayout`: Calculated earnings for staff per trek.
+- `Itinerary`: Day-by-day trek itinerary items.
+- `StaffApplication`: Applications submitted by trekkers to join as staff.
+- `StaffAvailability`: Blocked dates for staff availability.
+- `Announcement`: Broadcast messages sent by admins/staff to trekkers booked on a trek.
+- `DebriefReport`: Post-trek condition reports submitted by staff guides.

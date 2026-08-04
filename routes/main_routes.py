@@ -6,12 +6,12 @@ from datetime import datetime, date
 
 main_bp = Blueprint('main', __name__)
 
-# Region display order and emoji labels
+# Region display order and labels
 REGION_META = OrderedDict([
-    ('North', {'emoji': '🏔️', 'label': 'North India - Himalayas & Beyond'}),
-    ('East',  {'emoji': '🌿', 'label': 'East & North-East India - Wildlife & Valleys'}),
-    ('West',  {'emoji': '🌧️', 'label': 'West India - Sahyadri & Monsoon Trails'}),
-    ('South', {'emoji': '🌳', 'label': 'South India - Western Ghats'}),
+    ('North', {'label': 'North India - Himalayas & Beyond'}),
+    ('East',  {'label': 'East & North-East India - Wildlife & Valleys'}),
+    ('West',  {'label': 'West India - Sahyadri & Monsoon Trails'}),
+    ('South', {'label': 'South India - Western Ghats'}),
 ])
 
 

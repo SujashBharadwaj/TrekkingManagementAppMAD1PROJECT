@@ -66,12 +66,9 @@ def search_treks():
 @login_required
 @role_required('trekker')
 def book_trek(id):
-    from models import DiscountCode
     trek = db.session.get(Trek, id) or abort(404)
     slots_requested = request.form.get('slots', 1, type=int)
     wants_insurance = request.form.get('insurance') == 'on'
-
-    discount_code_str = request.form.get('discount_code', '').strip().upper()
     medical_info = request.form.get('medical_info', '').strip()
     dietary_needs = request.form.get('dietary_needs', '').strip()
 
@@ -90,44 +87,20 @@ def book_trek(id):
         flash('You have already booked this trek.', 'warning')
         return redirect(url_for('main.trek_detail', id=id))
 
-    # Calculate total price: base * slots + optional insurance (500 per slot)
     base_cost = trek.price * slots_requested
     insurance_cost = 500.0 * slots_requested if wants_insurance else 0.0
-    
-    discount_amount = 0.0
-    if discount_code_str:
-        from datetime import date
-        code = DiscountCode.query.filter_by(code=discount_code_str, is_active=True).first()
-        if not code:
-            flash('Invalid or inactive discount code.', 'warning')
-        elif code.expiry_date and code.expiry_date < date.today():
-            flash('Discount code has expired.', 'warning')
-        elif code.max_uses and code.times_used >= code.max_uses:
-            flash('Discount code has reached maximum uses.', 'warning')
-        else:
-            if code.discount_type == 'percent':
-                discount_amount = base_cost * (code.value / 100.0)
-            else:
-                discount_amount = code.value
-            discount_amount = min(discount_amount, base_cost)
-            code.times_used += 1
-
-    total = base_cost + insurance_cost - discount_amount
+    total = base_cost + insurance_cost
 
     trek.available_slots -= slots_requested
     db.session.add(Booking(
         user_id=session['user_id'], trek_id=trek.id,
         slots_booked=slots_requested, status='Booked',
         has_insurance=wants_insurance, total_price=total,
-        discount_amount=discount_amount,
         medical_info=medical_info, dietary_needs=dietary_needs
     ))
     db.session.commit()
-    
-    msg = f'Trek "{trek.name}" booked for {slots_requested} slot(s). Total: ₹{total:.2f}'
-    if discount_amount > 0:
-        msg += f' (Discount applied: -₹{discount_amount:.2f})'
-    flash(msg, 'success')
+
+    flash(f'Trek "{trek.name}" booked for {slots_requested} slot(s). Total: ₹{total:.2f}', 'success')
     return redirect(url_for('trekker.user_dashboard'))
 
 

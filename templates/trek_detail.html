@@ -21,7 +21,7 @@
         {% endif %}
 
         <h2>{{ trek.name }}</h2>
-        <p class="text-muted">📍 {{ trek.location }} · {{ trek.region }} India</p>
+        <p class="text-muted">{{ trek.location }} · {{ trek.region }} India</p>
 
         <p>{{ trek.description }}</p>
 
@@ -61,7 +61,7 @@
         {% if trek.base_camp_info %}
             <div class="card mb-4 border-primary shadow-sm">
                 <div class="card-body">
-                    <h5 class="card-title text-primary">🚍 Base Camp Logistics</h5>
+                    <h5 class="card-title text-primary">Base Camp Logistics</h5>
                     <p class="card-text mb-0">{{ trek.base_camp_info }}</p>
                 </div>
             </div>
@@ -69,7 +69,7 @@
 
         <!-- Visual Route Progress Trail -->
         <div class="mb-4">
-            <h5 class="mb-3">🗺️ Trek Route Progress Trail</h5>
+            <h5 class="mb-3">Trek Route Progress Trail</h5>
             <div class="route-trail-container p-3 bg-light rounded shadow-sm border">
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <div class="route-node text-center p-2 bg-white rounded border border-primary shadow-sm" style="min-width: 110px;">
@@ -93,7 +93,7 @@
                                 <span class="badge {% if is_exit %}bg-warning text-dark{% else %}bg-secondary{% endif %} mb-1">Day {{ item.day_number }}</span>
                                 <div class="small fw-bold text-truncate" style="max-width: 110px;" title="{{ item.title }}">{{ item.title }}</div>
                                 {% if is_exit %}
-                                    <div class="text-danger fw-semibold" style="font-size: 0.7rem;">🚪 Exit Point</div>
+                                    <div class="text-danger fw-semibold" style="font-size: 0.7rem;">Exit Point</div>
                                 {% else %}
                                     <div class="text-muted" style="font-size: 0.7rem;">No Exit</div>
                                 {% endif %}
@@ -113,7 +113,7 @@
         <!-- Route & Exit Points -->
         {% if trek.exit_points %}
             <div class="mb-4">
-                <h6>🚪 All Registered Exit Points</h6>
+                <h6>All Registered Exit Points</h6>
                 <p>
                     {% for point in trek.exit_points.split(',') %}
                         <span class="badge bg-light text-dark border me-1">{{ point.strip() }}</span>
@@ -125,21 +125,21 @@
         <!-- Travel Inclusion -->
         <div class="mb-3">
             {% if trek.travel_included %}
-                <div class="alert alert-success py-2 mb-2">✅ Travel/transport to base camp is <strong>included</strong> in the price.</div>
+                <div class="alert alert-success py-2 mb-2">Travel/transport to base camp is <strong>included</strong> in the price.</div>
             {% else %}
-                <div class="alert alert-warning py-2 mb-2">⚠️ Travel/transport is <strong>NOT included</strong>. You need to arrange your own travel to the base camp.</div>
+                <div class="alert alert-warning py-2 mb-2">Travel/transport is <strong>NOT included</strong>. You need to arrange your own travel to the base camp.</div>
             {% endif %}
         </div>
 
         <!-- Insurance Info -->
         <div class="alert alert-info py-2 mb-3">
-            🛡️ <strong>Insurance:</strong> Optional trek insurance is available at ₹500 per slot. Covers medical evacuation and trip cancellation.
+            <strong>Insurance:</strong> Optional trek insurance is available at ₹500 per slot. Covers medical evacuation and trip cancellation.
         </div>
 
         <!-- Itinerary Toggle -->
         {% if items %}
             <button class="btn btn-outline-primary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#itinerarySection">
-                📋 View Day-by-Day Itinerary Details
+                View Day-by-Day Itinerary Details
             </button>
             <div class="collapse" id="itinerarySection">
                 <div class="card card-body">
@@ -171,14 +171,14 @@
 
         <!-- Reviews -->
         {% if trek.reviews %}
-            <h5 class="mt-4">⭐ Reviews</h5>
+            <h5 class="mt-4">Reviews</h5>
             {% for review in trek.reviews %}
                 <div class="card mb-2 shadow-sm">
                     <div class="card-body py-2">
                         <strong>{{ review.user.username }}</strong>
                         <span class="ms-1">
                         {% for i in range(1, 6) %}
-                            {% if i <= review.rating %}⭐{% else %}☆{% endif %}
+                            {% if i <= review.rating %}<span class="text-warning">&#9733;</span>{% else %}<span class="text-muted">&#9734;</span>{% endif %}
                         {% endfor %}
                         </span>
                         {% if review.comment %}
@@ -202,7 +202,7 @@
 
                 {% if trek.status == 'Open' and session.get('role') == 'trekker' %}
                     <button type="button" class="btn btn-success w-100 mb-2 py-2 fs-5 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#bookingModal">
-                        🎒 Book Now
+                        Book Now
                     </button>
                 {% elif not session.get('user_id') %}
                     <a href="{{ url_for('auth.login', next=request.path) }}" class="btn btn-outline-primary w-100">Login to Book</a>
@@ -212,7 +212,7 @@
 
                 {% if alternate_dates %}
                     <hr>
-                    <h6>📅 Other Available Dates</h6>
+                    <h6>Other Available Dates</h6>
                     {% for alt in alternate_dates %}
                         <a href="{{ url_for('main.trek_detail', id=alt.id) }}" class="btn btn-outline-secondary btn-sm w-100 mb-2">
                             {{ alt.start_date|ddmmyyyy }} - {{ alt.available_slots }} slots left
@@ -230,7 +230,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">🎒 Complete Your Booking</h5>
+                <h5 class="modal-title">Complete Your Booking</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ url_for('trekker.book_trek', id=trek.id) }}" method="POST">
@@ -242,10 +242,6 @@
                         <input type="number" name="slots" id="modal-slots" value="1" min="1" max="{{ trek.available_slots }}" class="form-control" required>
                     </div>
                     
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Discount Code (Feature #7)</label>
-                        <input type="text" name="discount_code" class="form-control text-uppercase" placeholder="Got a promo code?">
-                    </div>
 
                     <div class="form-check mb-4 bg-light p-3 border rounded shadow-sm">
                         <input type="checkbox" name="insurance" class="form-check-input ms-0 me-2" id="modal-insurance">
@@ -253,7 +249,7 @@
                         <p class="small text-muted mb-0 mt-1 ms-4">Covers medical evacuation, altitude sickness, and trip cancellation for ₹500/slot.</p>
                     </div>
 
-                    <h6 class="border-bottom pb-2 mb-3 mt-4">Participant Information (Feature #15)</h6>
+                    <h6 class="border-bottom pb-2 mb-3 mt-4">Participant Information</h6>
                     <div class="mb-3">
                         <label class="form-label">Medical Information <span class="text-muted">(Optional)</span></label>
                         <textarea name="medical_info" class="form-control" rows="2" placeholder="Asthma, allergies, past injuries..."></textarea>

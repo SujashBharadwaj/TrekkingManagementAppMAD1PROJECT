@@ -5,12 +5,9 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-10">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('admin.admin_treks') }}">Treks</a></li>
-                <li class="breadcrumb-item active">Edit Trek #{{ trek.id }}</li>
-            </ol>
-        </nav>
+        <div class="mb-3">
+            <a href="{{ url_for('admin.admin_treks') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Treks</a>
+        </div>
 
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -79,18 +76,9 @@
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="safety_guide_id" class="form-label">Safety Guide (Feature #6)</label>
-                            <select class="form-select" id="safety_guide_id" name="safety_guide_id">
-                                <option value="0">-- None --</option>
-                                {% for guide in safety_guides %}
-                                    <option value="{{ guide.id }}" {% if trek.safety_guide_id == guide.id %}selected{% endif %}>{{ guide.title }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4 mb-3">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
-                                {% for s in ['Pending', 'Approved', 'Open', 'Closed', 'Completed', 'Emergency'] %}
+                                {% for s in ['Pending', 'Approved', 'Open', 'Closed', 'Completed'] %}
                                     <option value="{{ s }}" {% if trek.status == s %}selected{% endif %}>{{ s }}</option>
                                 {% endfor %}
                             </select>
@@ -99,7 +87,7 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="gear_checklist" class="form-label">Gear Checklist (Feature #18)</label>
+                            <label for="gear_checklist" class="form-label">Gear Checklist</label>
                             <textarea class="form-control" id="gear_checklist" name="gear_checklist" rows="3" placeholder="One item per line (e.g. First Aid Kit, Rope 50m)">{{ trek.gear_checklist or '' }}</textarea>
                             <small class="text-muted">Staff will verify these items before departure.</small>
                         </div>

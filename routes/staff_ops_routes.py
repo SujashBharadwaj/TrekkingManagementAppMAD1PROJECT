@@ -8,52 +8,7 @@ staff_ops_bp = Blueprint('staff_ops', __name__, url_prefix='/staff')
 
 
 # =========================================================
-# Feature #13: Safety Guide Viewer
-# =========================================================
-@staff_ops_bp.route('/safety-guide/<int:trek_id>')
-@login_required
-@role_required('staff')
-def view_safety_guide(trek_id):
-    """Read-only view of the safety guide attached to a trek."""
-    trek = db.session.get(Trek, trek_id) or abort(404)
-    if trek.assigned_staff_id != session['user_id']:
-        flash('Unauthorized.', 'danger')
-        return redirect(url_for('staff.staff_dashboard'))
-
-    if not trek.safety_guide:
-        flash('No safety guide has been attached to this trek yet.', 'info')
-        return redirect(url_for('staff.staff_dashboard'))
-
-    return render_template('staff/safety_guide.html', trek=trek, guide=trek.safety_guide)
-
-
-# =========================================================
-# Feature #14: Emergency SOS Alert
-# =========================================================
-@staff_ops_bp.route('/trek/<int:id>/sos', methods=['POST'])
-@login_required
-@role_required('staff')
-def sos_alert(id):
-    """Flag a trek as having an active emergency."""
-    trek = db.session.get(Trek, id) or abort(404)
-    if trek.assigned_staff_id != session['user_id']:
-        flash('Unauthorized.', 'danger')
-        return redirect(url_for('staff.staff_dashboard'))
-
-    if trek.status == 'Emergency':
-        trek.status = 'Open'
-        db.session.commit()
-        flash(f'SOS alert for "{trek.name}" has been cancelled.', 'success')
-    else:
-        trek.status = 'Emergency'
-        db.session.commit()
-        flash(f'🚨 EMERGENCY ALERT raised for "{trek.name}"! Admin has been notified.', 'danger')
-
-    return redirect(url_for('staff.staff_dashboard'))
-
-
-# =========================================================
-# Feature #16: Post-Trek Debrief Report
+# Post-Trek Debrief Report
 # =========================================================
 @staff_ops_bp.route('/trek/<int:id>/debrief', methods=['GET', 'POST'])
 @login_required
@@ -251,12 +206,4 @@ def local_connects(id):
             if line:
                 connects.append(line)
 
-    guide_contacts = []
-    if trek.safety_guide and trek.safety_guide.emergency_contacts:
-        for line in trek.safety_guide.emergency_contacts.split('\n'):
-            line = line.strip()
-            if line:
-                guide_contacts.append(line)
-
-    return render_template('staff/local_connects.html', trek=trek,
-                           connects=connects, guide_contacts=guide_contacts)
+    return render_template('staff/local_connects.html', trek=trek, connects=connects)

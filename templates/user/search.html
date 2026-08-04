@@ -59,7 +59,7 @@
                                     {{ trek.difficulty }}
                                 </span>
                                 <h5 class="card-title">{{ trek.name }}</h5>
-                                <p class="card-text text-muted">📍 Location: {{ trek.location }}</p>
+                                <p class="card-text text-muted">Location: {{ trek.location }}</p>
                                 <p class="card-text">
                                     <strong>Duration:</strong> {{ trek.duration }} days<br>
                                     <strong>Price:</strong> ₹{{ "%.2f"|format(trek.price) }}<br>
@@ -70,7 +70,7 @@
                                     <p class="card-text mb-0">
                                         {% set avg = (trek.reviews | map(attribute='rating') | list | sum) / (trek.reviews | length) %}
                                         {% for i in range(1, 6) %}
-                                            {% if i <= avg|round(0, 'floor')|int %}⭐{% else %}☆{% endif %}
+                                            {% if i <= avg|round(0, 'floor')|int %}<span class="text-warning">&#9733;</span>{% else %}<span class="text-muted">&#9734;</span>{% endif %}
                                         {% endfor %}
                                         <small class="text-muted">({{ trek.reviews|length }})</small>
                                     </p>

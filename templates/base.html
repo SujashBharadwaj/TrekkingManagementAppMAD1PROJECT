@@ -86,13 +86,18 @@
     </div>
 
     <main class="container py-4">
+        {% if request.endpoint != 'main.index' %}
+        <div class="mb-3">
+            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-sm">&larr; Back to Home</a>
+        </div>
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 
     <footer class="mt-auto" style="background-color: #2d6a4f; color: #d8f3dc; padding: 20px 0;">
         <div class="container text-center">
             <p class="mb-1">&copy; 2026 Mountains & Maggi - Trekking Management</p>
-            <p class="mb-0 small">📞 +91 98765 XXXXX &nbsp;|&nbsp; 📧 <a href="mailto:hello@mountainsandmaggi.in" style="color: #d8f3dc; text-decoration: underline;">hello@mountainsandmaggi.in</a></p>
+            <p class="mb-0 small">+91 98765 XXXXX &nbsp;|&nbsp; <a href="mailto:hello@mountainsandmaggi.in" style="color: #d8f3dc; text-decoration: underline;">hello@mountainsandmaggi.in</a></p>
         </div>
     </footer>
 

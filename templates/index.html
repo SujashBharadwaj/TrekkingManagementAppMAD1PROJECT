@@ -9,7 +9,7 @@
         {% if welcome_msg %}
             <h1 class="display-6 fw-bold">{{ welcome_msg }}</h1>
         {% else %}
-            <h1 class="display-5 fw-bold">🏔️ Mountains & Maggi</h1>
+            <h1 class="display-5 fw-bold">Mountains & Maggi</h1>
             <p class="col-md-8 fs-5">Explore treks across India - from the frozen rivers of Ladakh to the monsoon trails of the Sahyadris.</p>
         {% endif %}
 
@@ -33,7 +33,7 @@
     <div class="card-body">
         <form method="GET" action="{{ url_for('main.index') }}" class="row g-2 align-items-end">
             <div class="col-md-2">
-                <label class="form-label fw-semibold">📍 Region</label>
+                <label class="form-label fw-semibold">Region</label>
                 <select name="region" class="form-select" onchange="this.form.submit()">
                     <option value="">All Regions</option>
                     <option value="North" {% if region == 'North' %}selected{% endif %}>North India</option>
@@ -43,7 +43,7 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label fw-semibold">⛰️ Difficulty</label>
+                <label class="form-label fw-semibold">Difficulty</label>
                 <select name="difficulty" class="form-select">
                     <option value="">All</option>
                     <option value="Easy" {% if difficulty == 'Easy' %}selected{% endif %}>Easy</option>
@@ -52,7 +52,7 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label fw-semibold">🌦️ Best Season</label>
+                <label class="form-label fw-semibold">Best Season</label>
                 <select name="season" class="form-select">
                     <option value="">All Seasons</option>
                     <option value="Summer" {% if season == 'Summer' %}selected{% endif %}>Summer</option>
@@ -62,15 +62,15 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label fw-semibold">⏱️ Duration (Days)</label>
+                <label class="form-label fw-semibold">Duration (Days)</label>
                 <input type="number" name="duration" class="form-control" placeholder="e.g. 5" min="1" value="{{ duration or '' }}">
             </div>
             <div class="col-md-2">
-                <label class="form-label fw-semibold">📅 Start Date</label>
+                <label class="form-label fw-semibold">Start Date</label>
                 <input type="date" name="start_date" class="form-control" min="{{ current_date }}" value="{{ start_date or '' }}">
             </div>
             <div class="col-md-2">
-                <label class="form-label fw-semibold">📅 End Date</label>
+                <label class="form-label fw-semibold">End Date</label>
                 <input type="date" name="end_date" class="form-control" min="{{ current_date }}" value="{{ end_date or '' }}">
             </div>
             <div class="col-12 d-flex gap-2 justify-content-end mt-2">
@@ -84,7 +84,7 @@
 <!-- Region-Grouped Trek Cards -->
 {% if grouped %}
     {% for region_key, data in grouped.items() %}
-        <h3 class="mt-4 mb-3">{{ data.meta.emoji }} {{ data.meta.label }}</h3>
+        <h3 class="mt-4 mb-3">{{ data.meta.label }}</h3>
         <div class="row">
             {% for trek in data.treks %}
                 <div class="col-md-4 mb-4">
@@ -115,7 +115,7 @@
                                     {% endif %}
                                 </div>
                                 <h5 class="card-title">{{ trek.name }}</h5>
-                                <p class="card-text text-muted mb-1">📍 {{ trek.location }}</p>
+                                <p class="card-text text-muted mb-1">{{ trek.location }}</p>
                                 <p class="card-text">
                                     <strong>Duration:</strong> {{ trek.duration }} days<br>
                                     <strong>Price:</strong> ₹{{ "%.0f"|format(trek.price) }}<br>
@@ -126,7 +126,7 @@
                                     <p class="card-text mb-0">
                                         {% set avg = (trek.reviews | map(attribute='rating') | list | sum) / (trek.reviews | length) %}
                                         {% for i in range(1, 6) %}
-                                            {% if i <= avg|round(0, 'floor')|int %}⭐{% else %}☆{% endif %}
+                                            {% if i <= avg|round(0, 'floor')|int %}<span class="text-warning">&#9733;</span>{% else %}<span class="text-muted">&#9734;</span>{% endif %}
                                         {% endfor %}
                                         <small class="text-muted">({{ trek.reviews|length }})</small>
                                     </p>

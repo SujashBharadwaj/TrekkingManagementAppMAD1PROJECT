@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash
 
 from config import Config
 from models import (db, User, StaffProfile, Trek, Booking, Itinerary,
-                    SafetyGuide, DiscountCode, Announcement, StaffPayout, Expense, DebriefReport)
+                    Announcement, StaffPayout, Expense, DebriefReport)
 
 
 def create_app(config_class=Config):
@@ -61,10 +61,10 @@ def seed_mock_data(app):
         if User.query.first():
             return
 
-        # --- Admin (password: admin@123) ---
+        # --- Admin (password: admin123) ---
         admin_user = User(
             username='admin', email='admin@trekking.com',
-            password_hash=generate_password_hash('admin@123', method='pbkdf2:sha256'),
+            password_hash=generate_password_hash('admin123', method='pbkdf2:sha256'),
             role='admin', status='active'
         )
         db.session.add(admin_user)
@@ -103,56 +103,17 @@ def seed_mock_data(app):
             db.session.flush()
             trekkers.append(u)
 
-        # --- Safety Guides (Feature #6) ---
-        guide1 = SafetyGuide(
-            title='Himalayan Trek Safety Protocol',
-            content=('1. Always carry a first-aid kit and emergency whistle.\n'
-                     '2. Stay hydrated — drink at least 3L water per day above 10,000 ft.\n'
-                     '3. Never trek alone after dark. Stick to marked trails.\n'
-                     '4. In case of AMS symptoms (headache, nausea, dizziness), descend immediately.\n'
-                     '5. Keep emergency shelter ready — weather can turn in minutes.\n'
-                     '6. Inform base camp of any medical conditions before departure.\n'
-                     '7. Carry high-energy snacks (dry fruits, chocolate, energy bars).\n'
-                     '8. Respect wildlife — do not feed or approach animals.'),
-            emergency_contacts=('Mountain Rescue: +91 98765 43210\n'
-                                'District Hospital Manali: +91 1902 252342\n'
-                                'ITBP Rescue Helpline: 112\n'
-                                'State Disaster Response: 1070'),
-            exit_points='Jobra Base Camp\nBalu Ka Ghera Camp\nShea Goru Campsite\nChatru Road Head'
-        )
-        guide2 = SafetyGuide(
-            title='Western Ghats Monsoon Safety',
-            content=('1. Leeches are common — carry salt and leech-proof socks.\n'
-                     '2. Avoid river crossings during heavy rain.\n'
-                     '3. Wear waterproof layers and keep electronics in dry bags.\n'
-                     '4. Trail surfaces become extremely slippery — use trekking poles.\n'
-                     '5. Watch for loose rocks on steep sections.\n'
-                     '6. Keep group together — visibility drops rapidly in fog.'),
-            emergency_contacts=('Forest Ranger Office Coorg: +91 8272 228305\n'
-                                'Kukke Subramanya Police: +91 8257 258233\n'
-                                'Ambulance: 108'),
-            exit_points='Kukke Subramanya Temple\nBhattara Mane Forest Camp\nShesha Parvatha Ridge'
-        )
-        db.session.add(guide1)
-        db.session.add(guide2)
-        db.session.flush()
+        # --- Safety Guides removed ---
 
-        # --- Discount Codes (Feature #7) ---
-        dc1 = DiscountCode(code='FIRSTTREK', discount_type='percent', value=10.0,
-                           max_uses=50, expiry_date=date.today() + timedelta(days=90))
-        dc2 = DiscountCode(code='MONSOON500', discount_type='flat', value=500.0,
-                           max_uses=100, expiry_date=date.today() + timedelta(days=60))
-        dc3 = DiscountCode(code='MOUNTAINS2026', discount_type='percent', value=15.0,
-                           max_uses=None, expiry_date=date.today() + timedelta(days=180))
-        db.session.add_all([dc1, dc2, dc3])
-        db.session.flush()
+
+        # --- Discount Codes removed ---
 
         # --- Treks (region-tagged Indian treks with new fields) ---
         today = date.today()
         trek_data = [
             # (name, location, region, difficulty, duration, slots, start, end, price,
             #  description, status, staff_id, best_season, route_kms, exit_points, travel_included, base_camp_info,
-            #  safety_guide_id, local_connects)
+            #  local_connects)
 
             # --- NORTH ---
             ('Hampta Pass Trek', 'Manali, Himachal Pradesh', 'North', 'Moderate', 5, 20,
@@ -160,7 +121,6 @@ def seed_mock_data(app):
              'A crossover trek from Manali to Spiti Valley through green meadows and snow-covered passes.',
              'Open', staff_users[0].id, 'Summer', 26.0, 'Jobra, Balu Ka Ghera, Shea Goru', True,
              'Direct pickup available from Manali Mall Road at 8:00 AM. Travel to Jobra base camp by taxi.',
-             guide1.id,
              'Local Taxi (Manali): Raju - +91 94180 12345\nHospital: Lady Willingdon Hospital, Manali - +91 1902 252006\nHomestay: Himalayan Cottage, Jagatsukh - +91 98160 55667'),
 
             ('Kedarkantha Trek', 'Sankri, Uttarakhand', 'North', 'Easy', 4, 30,
@@ -168,7 +128,6 @@ def seed_mock_data(app):
              'Winter trek in India with a summit at 12,500 ft offering 360-degree mountain views.',
              'Open', staff_users[1].id, 'Winter', 20.0, 'Juda Ka Talab, KK Base Camp', True,
              'Pick up from Dehradun Railway Station at 6:30 AM. Travel via bus to Sankri base camp.',
-             guide1.id,
              'Local Transport: Sharma Travels Dehradun - +91 99270 45678\nPHC Sankri: +91 1360 272223'),
 
             # Recurring batch
@@ -177,35 +136,34 @@ def seed_mock_data(app):
              'Winter trek in India with a summit at 12,500 ft offering 360-degree mountain views. (Feb batch)',
              'Open', staff_users[1].id, 'Winter', 20.0, 'Juda Ka Talab, KK Base Camp', True,
              'Pick up from Dehradun Railway Station at 6:30 AM. Travel via bus to Sankri base camp.',
-             guide1.id, None),
+             None),
 
             ('Valley of Flowers', 'Joshimath, Uttarakhand', 'North', 'Easy', 6, 25,
              today + timedelta(days=15), today + timedelta(days=21), 7200.00,
              'UNESCO World Heritage Site known for its endemic alpine flowers and views of the Himalayas.',
              'Open', staff_users[1].id, 'Monsoon', 38.0, 'Govindghat, Ghangaria', True,
              'Pick up from Rishikesh Railway Station at 6:00 AM. 10 hour drive to Govindghat.',
-             guide1.id, None),
+             None),
 
             ('Roopkund Trek', 'Lohajung, Uttarakhand', 'North', 'Hard', 8, 15,
              today + timedelta(days=20), today + timedelta(days=28), 12500.00,
              'The famous Skeleton Lake trek at 15,696 ft with views of Trishul and Nanda Ghunti peaks.',
              'Open', staff_users[0].id, 'Summer', 53.0, 'Didna, Bedni Bugyal, Pathar Nachauni', False,
              'Starts at Lohajung base camp. Trekkers must report directly to Lohajung by evening.',
-             guide1.id, None),
+             None),
 
             ('Chadar Trek', 'Leh, Ladakh', 'North', 'Hard', 9, 12,
              today + timedelta(days=30), today + timedelta(days=39), 18000.00,
              'Walk on the frozen Zanskar River in sub-zero temperatures. An extreme adventure.',
              'Pending', None, 'Winter', 62.0, 'Tilat Sumdo, Nerak', False,
              'Report directly to Leh airport. Rest and acclimatisation in Leh hotel for 2 days.',
-             None, None),
+             None),
 
             ('Triund Trek', 'McLeodganj, Himachal Pradesh', 'North', 'Easy', 2, 40,
              today - timedelta(days=10), today - timedelta(days=8), 3500.00,
              'A short weekend trek with views of the Dhauladhar range. Perfect for beginners.',
              'Completed', staff_users[0].id, 'Autumn', 9.0, 'Gallu Devi Temple', True,
              'Meet at McLeodganj Main Square at 9:00 AM. Guide will lead walking trail starting from Dharamkot.',
-             guide1.id,
              'Local Taxi: Dharamshala Cabs - +91 98160 77889\nHospital: Delek Hospital, McLeodganj - +91 1892 222053\nHomestay: Om Tara Guesthouse - +91 94180 33445'),
 
             ('Brahmatal Trek', 'Lohajung, Uttarakhand', 'North', 'Moderate', 6, 20,
@@ -213,14 +171,14 @@ def seed_mock_data(app):
              'Winter wonderland trek with views of Mt. Trishul and Nanda Ghunti reflected in the lake.',
              'Open', staff_users[0].id, 'Winter', 24.0, 'Bekaltal, Brahmatal Campsite, Tilandi', True,
              'Pick up from Kathgodam Railway Station at 6:00 AM. Drive to Lohajung base camp.',
-             guide1.id, None),
+             None),
 
             ('Kuari Pass Trek', 'Joshimath, Uttarakhand', 'North', 'Easy', 5, 25,
              today + timedelta(days=8), today + timedelta(days=13), 6200.00,
              'Lord Curzon trail offering views of Nanda Devi, Dronagiri, and Kamet peaks.',
              'Open', staff_users[1].id, 'Winter', 33.0, 'Dhak, Tali, Khullara', True,
              'Pick up from Haridwar Railway Station at 6:30 AM. Travel to Dhak Village starting point.',
-             guide1.id, None),
+             None),
 
             # --- EAST ---
             ('Sandakphu Trek', 'Darjeeling, West Bengal', 'East', 'Moderate', 7, 18,
@@ -228,21 +186,21 @@ def seed_mock_data(app):
              'Highest peak in West Bengal with views of Everest and Kanchenjunga.',
              'Open', staff_users[1].id, 'Autumn', 51.0, 'Tumling, Kalipokhri, Sabarkum', True,
              'Pick up from NJP Railway Station / Bagdogra Airport at 8:00 AM. Drive to Manebhanjan.',
-             None, None),
+             None),
 
             ('Goechala Trek', 'Yuksom, Sikkim', 'East', 'Hard', 10, 12,
              today + timedelta(days=25), today + timedelta(days=35), 15500.00,
              'Face-to-face with Kanchenjunga. High-altitude trek in India through rhododendron forests.',
              'Open', staff_users[0].id, 'Summer', 90.0, 'Tshoka, Dzongri, Lamuney, Samiti Lake', False,
              'Report to Yuksom base camp directly. Shared jeeps available from Siliguri/NJP.',
-             None, None),
+             None),
 
             ('Dzukou Valley Trek', 'Kohima, Nagaland', 'East', 'Moderate', 3, 20,
              today + timedelta(days=14), today + timedelta(days=17), 4800.00,
              'Valley of flowers in the Northeast. Known for rare Dzukou lily blooms and wildlife sightings.',
              'Open', staff_users[1].id, 'Monsoon', 16.0, 'Viswema Village, Dzukou Rest House', True,
              'Pick up from Dimapur Airport/Railway Station at 9:00 AM. Drive to Viswema Village starting point.',
-             None, None),
+             None),
 
             # --- WEST ---
             ('Harishchandragad Trek', 'Ahmednagar, Maharashtra', 'West', 'Moderate', 2, 30,
@@ -250,14 +208,14 @@ def seed_mock_data(app):
              'Monsoon trek in Maharashtra. Features the stunning Konkan Kada cliff, caves, and Sahyadri valleys.',
              'Open', staff_users[0].id, 'Monsoon', 14.0, 'Pachnai, Tolar Khind, Konkan Kada', True,
              'Meet at Kasara Railway Station at 7:30 AM. Travel via local transport to Pachnai Village base camp.',
-             None, None),
+             None),
 
             ('Kalsubai Peak Trek', 'Nashik, Maharashtra', 'West', 'Easy', 1, 40,
              today + timedelta(days=3), today + timedelta(days=4), 1800.00,
              'The highest peak in Maharashtra at 5,400 ft. A quick sunrise trek with laddered sections.',
              'Open', staff_users[1].id, 'Monsoon', 6.0, 'Bari Village', True,
              'Meet at Kasara Railway Station at 10:00 PM (night trek). Travel via jeep to Bari Village starting point.',
-             None, None),
+             None),
 
             # --- SOUTH ---
             ('Kumara Parvatha Trek', 'Coorg, Karnataka', 'South', 'Hard', 3, 15,
@@ -265,7 +223,6 @@ def seed_mock_data(app):
              'Tough trek in South India through Western Ghats. Shola forests and Pushpagiri peak.',
              'Open', staff_users[0].id, 'Winter', 22.0, 'Kukke Subramanya, Bhattara Mane, Shesha Parvatha', False,
              'Report to Kukke Subramanya temple town directly. Trek begins early morning from Temple Road.',
-             guide2.id,
              'Forest Office Coorg: +91 8272 228305\nLocal Guide: Mohan - +91 97409 12345\nHomestay: Coorg Wilderness - +91 82712 56789'),
 
             ('Meesapulimala Trek', 'Munnar, Kerala', 'South', 'Moderate', 2, 20,
@@ -273,21 +230,21 @@ def seed_mock_data(app):
              'Second highest peak in South India. Rolling grasslands and Nilgiri Tahr sightings.',
              'Open', staff_users[1].id, 'Winter', 16.0, 'Rhodo Valley, Summit Camp', True,
              'Pick up from Munnar KSRTC Bus Stand at 8:30 AM. Drive to Silent Valley / Rhodo Valley base camp.',
-             guide2.id, None),
+             None),
         ]
 
         trek_objects = []
         for data in trek_data:
             (name, loc, reg, diff, dur, slots, sd, ed, price,
              desc, status, staff_id, season, kms, exits, travel, base_info,
-             guide_id, connects) = data
+             connects) = data
             t = Trek(name=name, location=loc, region=reg, difficulty=diff, duration=dur,
                      total_slots=slots, available_slots=slots,
                      start_date=sd, end_date=ed, price=price,
                      description=desc, status=status, assigned_staff_id=staff_id,
                      best_season=season, route_kms=kms, exit_points=exits,
                      travel_included=travel, base_camp_info=base_info,
-                     safety_guide_id=guide_id, local_connects=connects)
+                     local_connects=connects)
             db.session.add(t)
             db.session.flush()
             trek_objects.append(t)

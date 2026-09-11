@@ -49,6 +49,10 @@ def create_app(config_class=Config):
             return value
         return value.strftime('%d-%m-%Y')
 
+    with app.app_context():
+        db.create_all()
+        seed_mock_data(app)
+
     return app
 
 
@@ -337,7 +341,4 @@ def seed_mock_data(app):
 app = create_app()
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    seed_mock_data(app)
     app.run(debug=True, port=4200)

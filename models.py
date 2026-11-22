@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_sqlalchemy import SQLAlchemy
 
 # Initialize db instance to be bound to Flask app later
@@ -291,3 +291,42 @@ class StaffAvailability(db.Model):
 
     def __repr__(self):
         return f'<StaffAvailability Staff:{self.staff_id} {self.unavailable_from} to {self.unavailable_to}>'
+
+
+# ---------------------------------------------------------------------------
+# MCP demo tables (docs/MCP.md), for /mcp, /demo/walker and the walkers' booking limits.
+# ---------------------------------------------------------------------------
+
+def utc_now():
+    """Naive UTC time, like the datetime.utcnow defaults above, without its deprecation."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+class McpWalker(db.Model):
+    """The throwaway trekker that one portfolio visit's AI agent books as.
+
+    Kept in its own table, so housekeeping only ever deletes users it made itself,
+    never a real account that happens to be called walker-something.
+    """
+    __tablename__ = 'mcp_walkers'
+
+    id = db.Column(db.Integer, primary_key=True)
+    visit_id = db.Column(db.String(36), unique=True, nullable=False)  # the MM-Visit-Id header, a UUID v4
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=utc_now)
+
+    def __repr__(self):
+        return f'<McpWalker {self.visit_id} User:{self.user_id}>'
+
+
+class McpToolCall(db.Model):
+    """One row per MCP tool call, for the per-visit and per-minute limits. Kept for an hour."""
+    __tablename__ = 'mcp_tool_calls'
+
+    id = db.Column(db.Integer, primary_key=True)
+    visit_id = db.Column(db.String(36), nullable=True, index=True)  # None for calls without a visit
+    tool = db.Column(db.String(40), nullable=False)
+    called_at = db.Column(db.DateTime, nullable=False, index=True)
+
+    def __repr__(self):
+        return f'<McpToolCall {self.tool} {self.called_at}>'

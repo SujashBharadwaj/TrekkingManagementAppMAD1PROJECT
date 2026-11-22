@@ -31,7 +31,9 @@ def login_required(f):
             from flask import request
             return redirect(url_for('auth.login', next=request.full_path))
         user = db.session.get(User, session['user_id'])
-        if not user:
+        # Usernames never change, so a mismatch means the account was deleted and
+        # SQLite gave its id to a new one (walkers come and go every hour).
+        if not user or user.username != session.get('username'):
             session.clear()
             flash('Session invalid. Please log in again.', 'danger')
             return redirect(url_for('auth.login'))

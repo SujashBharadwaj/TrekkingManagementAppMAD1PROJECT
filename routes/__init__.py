@@ -6,3 +6,6 @@ from .staff_routes import staff_bp
 from .staff_ops_routes import staff_ops_bp
 from .trekker_routes import trekker_bp
 from .main_routes import main_bp
+from .mcp_routes import mcp_bp
+from .demo_routes import demo_bp
+from .api_routes import api_bp

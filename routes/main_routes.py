@@ -15,6 +15,19 @@ REGION_META = OrderedDict([
 ])
 
 
+def soonest_per_name(treks, today):
+    """Keep one departure per trek name: the soonest that hasn't started yet, or
+    the earliest one if every departure of that name has. `treks` must already
+    be sorted by start date. The trek page lists the rest under "Other Available Dates".
+    """
+    chosen = {}
+    for trek in treks:
+        current = chosen.get(trek.name)
+        if current is None or (current.start_date <= today < trek.start_date):
+            chosen[trek.name] = trek
+    return sorted(chosen.values(), key=lambda t: (t.start_date, t.id))
+
+
 @main_bp.route('/')
 def index():
     # --- Grab filter params ---
@@ -70,7 +83,7 @@ def index():
     if end_date:
         query = query.filter(Trek.end_date <= end_date)
 
-    treks = query.order_by(Trek.start_date.asc()).all()
+    treks = soonest_per_name(query.order_by(Trek.start_date.asc(), Trek.id.asc()).all(), today)
 
     # --- Group by region ---
     grouped = OrderedDict()

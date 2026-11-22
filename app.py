@@ -1,6 +1,6 @@
 import os
-from datetime import datetime, date
-from flask import Flask
+from datetime import datetime, date, timedelta
+from flask import Flask, jsonify
 from werkzeug.security import generate_password_hash
 
 from config import Config
@@ -21,7 +21,7 @@ def create_app(config_class=Config):
 
     # --- Register Blueprints ---
     from routes import (auth_bp, admin_bp, admin_finance_bp, admin_ops_bp,
-                        staff_bp, staff_ops_bp, trekker_bp, main_bp)
+                        staff_bp, staff_ops_bp, trekker_bp, main_bp, mcp_bp, demo_bp, api_bp)
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -31,6 +31,16 @@ def create_app(config_class=Config):
     app.register_blueprint(staff_bp)
     app.register_blueprint(staff_ops_bp)
     app.register_blueprint(trekker_bp)
+    app.register_blueprint(mcp_bp)  # POST /mcp for AI agents, off until MCP_TOKEN is set
+    app.register_blueprint(demo_bp)  # POST /demo/walker for the browser agent, off the same way
+    app.register_blueprint(api_bp)  # GET /api/treks...: the public, read-only JSON API
+
+    @app.get('/healthz')
+    def healthz():
+        """Liveness check that wakes the app on Render: no session, no cookie, no database."""
+        response = jsonify(ok=True)
+        response.headers['Cache-Control'] = 'no-store'
+        return response
 
     # --- Context Processors & Filters ---
     from routes.utils import LIMITS
@@ -253,6 +263,9 @@ def seed_mock_data(app):
             db.session.flush()
             trek_objects.append(t)
 
+        # --- More departures of the same routes across the next 12 months (ids 17 on) ---
+        seed_extra_departures(trek_objects, today)
+
         # --- Bookings (with total_price and insurance) ---
         # user1 booked Hampta Pass (idx 0)
         trek_objects[0].available_slots -= 2
@@ -335,6 +348,59 @@ def seed_mock_data(app):
 
         db.session.commit()
         print(' * Mock data seeded successfully!')
+
+
+# Which seeded routes run in each calendar month, roughly following their seasons:
+# winter treks from December to March, high passes from May to October, the
+# monsoon trails of the Sahyadris and the North-East from June to September.
+# Every month has at least two, so "a June trek" always exists.
+DEPARTURE_PLAN = {
+    1: ['Kedarkantha Trek', 'Brahmatal Trek', 'Kumara Parvatha Trek', 'Meesapulimala Trek'],
+    2: ['Kedarkantha Trek', 'Kuari Pass Trek', 'Brahmatal Trek', 'Meesapulimala Trek'],
+    3: ['Kuari Pass Trek', 'Triund Trek', 'Sandakphu Trek', 'Kedarkantha Trek'],
+    4: ['Triund Trek', 'Sandakphu Trek', 'Goechala Trek', 'Kuari Pass Trek'],
+    5: ['Roopkund Trek', 'Goechala Trek', 'Triund Trek'],
+    6: ['Hampta Pass Trek', 'Roopkund Trek', 'Kalsubai Peak Trek', 'Dzukou Valley Trek'],
+    7: ['Valley of Flowers', 'Hampta Pass Trek', 'Harishchandragad Trek', 'Kalsubai Peak Trek'],
+    8: ['Valley of Flowers', 'Hampta Pass Trek', 'Dzukou Valley Trek', 'Harishchandragad Trek'],
+    9: ['Valley of Flowers', 'Hampta Pass Trek', 'Harishchandragad Trek', 'Kalsubai Peak Trek'],
+    10: ['Sandakphu Trek', 'Goechala Trek', 'Roopkund Trek', 'Triund Trek'],
+    11: ['Sandakphu Trek', 'Triund Trek', 'Kumara Parvatha Trek', 'Meesapulimala Trek'],
+    12: ['Kedarkantha Trek', 'Brahmatal Trek', 'Kuari Pass Trek', 'Kumara Parvatha Trek'],
+}
+DEPARTURE_DAYS = (6, 13, 20, 27)  # the days of the month a month's departures start on
+
+
+def seed_extra_departures(routes, today):
+    """Add Open departures of the seeded routes in each of the 12 months after this one.
+
+    Each copies its route's details from the first seeded trek of that name, with the
+    route's full number of slots free. The dates come from the seed day alone, so a
+    given day always seeds the same rows.
+    """
+    first_of = {}
+    for trek in routes:
+        first_of.setdefault(trek.name, trek)
+    taken = {(trek.name, trek.start_date) for trek in routes}
+    for ahead in range(1, 13):
+        months = today.month - 1 + ahead
+        year, month = today.year + months // 12, months % 12 + 1
+        for day, name in zip(DEPARTURE_DAYS, DEPARTURE_PLAN[month]):
+            route, start = first_of[name], date(year, month, day)
+            if (name, start) in taken:
+                continue
+            taken.add((name, start))
+            db.session.add(Trek(
+                name=route.name, location=route.location, region=route.region,
+                difficulty=route.difficulty, duration=route.duration,
+                total_slots=route.total_slots, available_slots=route.total_slots,
+                start_date=start, end_date=start + timedelta(days=route.duration),
+                price=route.price, description=route.description, status='Open',
+                assigned_staff_id=route.assigned_staff_id, best_season=route.best_season,
+                route_kms=route.route_kms, exit_points=route.exit_points,
+                travel_included=route.travel_included, base_camp_info=route.base_camp_info,
+                local_connects=route.local_connects))
+    db.session.flush()
 
 
 # --- Entry Point ---

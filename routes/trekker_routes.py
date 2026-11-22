@@ -2,7 +2,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, session
 # pyrefly: ignore [missing-import]
 from werkzeug.security import generate_password_hash
+from datetime import date
 from models import db, User, Trek, Booking, Review, TrekPhoto, Itinerary, StaffApplication, StaffReview
+from services import bookings
+from services.bookings import BookingError
 from .utils import login_required, role_required, LIMITS, _truncate, allowed_file, save_photo
 
 trekker_bp = Blueprint('trekker', __name__)
@@ -36,13 +39,16 @@ def user_dashboard():
         ).all()
         reviewed_staff_ids = {(sr.staff_id, sr.trek_id) for sr in staff_reviewed}
 
-    # For "Change Date" - find recurring treks for each upcoming booking
+    # For "Change Date": other open batches of the same trek that haven't started
+    # (services/bookings.py refuses a move onto a started one anyway)
     recurring_map = {}
+    today = date.today()
     for b in upcoming:
         alts = Trek.query.filter(
             Trek.name == b.trek.name,
             Trek.id != b.trek_id,
-            Trek.status == 'Open'
+            Trek.status == 'Open',
+            Trek.start_date > today
         ).order_by(Trek.start_date.asc()).all()
         if alts:
             recurring_map[b.id] = alts
@@ -72,35 +78,19 @@ def book_trek(id):
     medical_info = request.form.get('medical_info', '').strip()
     dietary_needs = request.form.get('dietary_needs', '').strip()
 
-    if slots_requested < 1:
-        flash('Must book at least 1 slot.', 'danger')
-        return redirect(url_for('main.trek_detail', id=id))
-    if trek.status != 'Open':
-        flash('This trek is not open for bookings.', 'danger')
-        return redirect(url_for('main.trek_detail', id=id))
-    if trek.available_slots < slots_requested:
-        flash('Not enough available slots.', 'danger')
-        return redirect(url_for('main.trek_detail', id=id))
-
-    existing = Booking.query.filter_by(user_id=session['user_id'], trek_id=trek.id, status='Booked').first()
-    if existing:
-        flash('You have already booked this trek.', 'warning')
+    # The rules live in services/bookings.py, shared with the MCP tools. A walker
+    # (the portfolio's browser agent) gets the demo's limits; real accounts get none.
+    max_seats, max_active = bookings.limits_for(session['user_id'])
+    try:
+        booking = bookings.book(session['user_id'], trek.id, slots_requested,
+                                insurance=wants_insurance,
+                                medical_info=medical_info, dietary_needs=dietary_needs,
+                                max_active=max_active, max_seats=max_seats)
+    except BookingError as refusal:
+        flash(refusal.reason, refusal.category)
         return redirect(url_for('main.trek_detail', id=id))
 
-    base_cost = trek.price * slots_requested
-    insurance_cost = 500.0 * slots_requested if wants_insurance else 0.0
-    total = base_cost + insurance_cost
-
-    trek.available_slots -= slots_requested
-    db.session.add(Booking(
-        user_id=session['user_id'], trek_id=trek.id,
-        slots_booked=slots_requested, status='Booked',
-        has_insurance=wants_insurance, total_price=total,
-        medical_info=medical_info, dietary_needs=dietary_needs
-    ))
-    db.session.commit()
-
-    flash(f'Trek "{trek.name}" booked for {slots_requested} slot(s). Total: ₹{total:.2f}', 'success')
+    flash(f'Trek "{trek.name}" booked for {slots_requested} slot(s). Total: ₹{booking.total_price:.2f}', 'success')
     return redirect(url_for('trekker.user_dashboard'))
 
 
@@ -108,19 +98,14 @@ def book_trek(id):
 @login_required
 @role_required('trekker')
 def cancel_booking(id):
-    booking = db.session.get(Booking, id) or abort(404)
-    if booking.user_id != session['user_id']:
-        flash('Unauthorized.', 'danger')
-        return redirect(url_for('trekker.user_dashboard'))
-    if booking.status != 'Booked':
-        flash('Only active bookings can be cancelled.', 'danger')
+    db.session.get(Booking, id) or abort(404)
+    try:
+        booking, _ = bookings.cancel(session['user_id'], id)
+    except BookingError as refusal:
+        flash(refusal.reason, refusal.category)
         return redirect(url_for('trekker.user_dashboard'))
 
-    trek = booking.trek
-    trek.available_slots += booking.slots_booked
-    booking.status = 'Cancelled'
-    db.session.commit()
-    flash(f'Booking for "{trek.name}" cancelled. Refund will be processed.', 'success')
+    flash(f'Booking for "{booking.trek.name}" cancelled. Refund will be processed.', 'success')
     return redirect(url_for('trekker.user_dashboard'))
 
 
@@ -129,17 +114,12 @@ def cancel_booking(id):
 @role_required('trekker')
 def toggle_insurance(id):
     """Toggle insurance on/off for an upcoming booking."""
-    booking = db.session.get(Booking, id) or abort(404)
-    if booking.user_id != session['user_id'] or booking.status != 'Booked':
-        flash('Cannot modify this booking.', 'danger')
+    db.session.get(Booking, id) or abort(404)
+    try:
+        booking = bookings.toggle_insurance(session['user_id'], id)
+    except BookingError as refusal:
+        flash(refusal.reason, refusal.category)
         return redirect(url_for('trekker.user_dashboard'))
-
-    booking.has_insurance = not booking.has_insurance
-    # Recalculate price
-    base = booking.trek.price * booking.slots_booked
-    ins = 500.0 * booking.slots_booked if booking.has_insurance else 0.0
-    booking.total_price = base + ins
-    db.session.commit()
 
     status = 'added' if booking.has_insurance else 'removed'
     flash(f'Insurance {status}. New total: ₹{booking.total_price:.2f}', 'success')
@@ -151,33 +131,17 @@ def toggle_insurance(id):
 @role_required('trekker')
 def change_date(id):
     """Move booking to a different batch of the same recurring trek."""
-    booking = db.session.get(Booking, id) or abort(404)
-    if booking.user_id != session['user_id'] or booking.status != 'Booked':
-        flash('Cannot modify this booking.', 'danger')
-        return redirect(url_for('trekker.user_dashboard'))
-
+    db.session.get(Booking, id) or abort(404)
     new_trek_id = request.form.get('new_trek_id', type=int)
-    new_trek = db.session.get(Trek, new_trek_id) or abort(404)
-
-    # Validate: same trek name, different ID, Open status, enough slots
-    if new_trek.name != booking.trek.name:
-        flash('Can only switch to another batch of the same trek.', 'danger')
-        return redirect(url_for('trekker.user_dashboard'))
-    if new_trek.status != 'Open' or new_trek.available_slots < booking.slots_booked:
-        flash('The selected batch is not available.', 'danger')
+    try:
+        booking = bookings.change_date(session['user_id'], id, new_trek_id)
+    except BookingError as refusal:
+        if refusal.code == 'no_trek':
+            abort(404)
+        flash(refusal.reason, refusal.category)
         return redirect(url_for('trekker.user_dashboard'))
 
-    # Release old slots, assign new
-    booking.trek.available_slots += booking.slots_booked
-    new_trek.available_slots -= booking.slots_booked
-    booking.trek_id = new_trek.id
-    # Recalculate price with new trek's price
-    base = new_trek.price * booking.slots_booked
-    ins = 500.0 * booking.slots_booked if booking.has_insurance else 0.0
-    booking.total_price = base + ins
-    db.session.commit()
-
-    flash(f'Booking moved to {new_trek.start_date.strftime("%d-%m-%Y")} batch.', 'success')
+    flash(f'Booking moved to {booking.trek.start_date.strftime("%d-%m-%Y")} batch.', 'success')
     return redirect(url_for('trekker.user_dashboard'))
 
 
